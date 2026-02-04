@@ -23,3 +23,4 @@ transformers<5
 torch
 langchain-huggingface
 sentence-transformers
+sqlite-vec
