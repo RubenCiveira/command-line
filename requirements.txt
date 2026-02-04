@@ -19,3 +19,6 @@ striprtf==0.0.29
 extract-msg==0.55.0
 beautifulsoup4==4.13.5
 PyYAML==6.0.3
+transformers<5
+torch
+langchain-huggingface
