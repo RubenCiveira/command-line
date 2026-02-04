@@ -31,7 +31,7 @@ MODELS = [
 # Cada nodo es un dict: las claves son categorías y los valores son
 # sus subcategorías (dict) o None si es hoja.
 def _load_category_tree() -> dict:
-    json_path = SCRIPT_DIR / "iptc_categories.json"
+    json_path = SCRIPT_DIR / ".." / "resources" / "iptc_categories.json"
     if json_path.exists():
         with open(json_path, encoding="utf-8") as f:
             return json.load(f)

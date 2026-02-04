@@ -16,7 +16,7 @@ SOURCE_URL = (
     "https://raw.githubusercontent.com/TajaKuzman/"
     "IPTC-Media-Topic-Classification/main/data/iptc_mapping.json"
 )
-OUTPUT_PATH = Path(__file__).parent / "iptc_categories.json"
+OUTPUT_PATH = Path(__file__).parent / ".." / ".." / "resources" / "iptc_categories.json"
 
 
 def download_source() -> dict:
