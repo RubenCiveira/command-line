@@ -1,0 +1,11 @@
+chat:
+        ("Qwen/Qwen2.5-1.5B-Instruct", "1.5B", "~3 GB", "Buen equilibrio tamaño/calidad"),
+
+zero_shot_eval
+        ("MoritzLaurer/ModernBERT-large-zeroshot-v2.0", "ModernBERT, multilingüe y reciente"),
+
+intention
+        ("Serj/intent-classifier", "Clasificador general de intenciones"),
+
+embbedings
+        "BAAI/bge-m3"

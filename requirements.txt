@@ -22,3 +22,4 @@ PyYAML==6.0.3
 transformers<5
 torch
 langchain-huggingface
+sentence-transformers
