@@ -7,9 +7,7 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-
-
-class ShellMemory:
+class UserMemory:
     SESSION_TTL_SECONDS = 24 * 3600
     GLOBAL_MAX_BYTES = 10 * 1024 * 1024  # 10MB
 

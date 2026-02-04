@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional, Sequence, Optional
 
 from ai.user.user_agent import UserAgent
-from ai.user.shell_memory import ShellMemory
+from ai.user.user_memory import UserMemory
 
 @dataclass
 class CmdResult:
@@ -61,7 +61,7 @@ def main() -> int:
         print("Usage: ai <request or command>")
         return 2
 
-    store = ShellMemory()
+    store = UserMemory()
 
     result = try_run_command(argv)
 
@@ -84,7 +84,7 @@ def main() -> int:
         """
         agent = UserAgent().root()
         response = agent.invoke( msg ).resolve()
-        print( "RESOLVED" )
+
         print( str(response.proposal) )
 
         # print("\nCommand failed, attempting interpretation...\n", file=sys.stderr)
