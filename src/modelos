@@ -8,4 +8,4 @@ intention
         ("Serj/intent-classifier", "Clasificador general de intenciones"),
 
 embbedings
-        "BAAI/bge-m3"
+        ("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "118M", "~470 MB", 384, "Multilingüe, compacto"),
