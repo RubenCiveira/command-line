@@ -39,6 +39,7 @@ command-line/
     embeddings_local.py # Pruebas de embeddings
     zero_shot_eval.py  # Evaluacion de clasificacion zero-shot
     intent_eval.py     # Evaluacion de deteccion de intents
+    guardrail_eval.py  # Evaluacion de guardrails (prompt injection)
   resources/
     iptc_categories.json  # Taxonomia IPTC Media Topics
 ```
@@ -84,6 +85,38 @@ La demo:
 ### Formatos soportados
 
 PDF, DOCX, PPTX, ODT, RTF, EML, MSG, HTML y cualquier fichero de texto plano.
+
+## Ejemplos de evaluacion
+
+### Guardrails (prompt injection)
+
+```bash
+PYTHONPATH=src .venv/bin/python examples/guardrail_eval.py
+```
+
+Permite probar modelos de deteccion de inyeccion con bateria de ejemplos y modo interactivo.
+
+### Intent detection
+
+```bash
+PYTHONPATH=src .venv/bin/python examples/intent_eval.py
+```
+
+Evalua deteccion de intenciones en distintos inputs y escenarios.
+
+### Zero-shot classification
+
+```bash
+PYTHONPATH=src .venv/bin/python examples/zero_shot_eval.py
+```
+
+Evalua clasificacion zero-shot con taxonomia IPTC.
+
+## Nota sobre modelos de meta-llama en Hugging Face
+
+El sistema actual no envia cabeceras de autorizacion para modelos de Hugging Face.
+Los modelos de `meta-llama` requieren autenticacion remota, por lo que no estan
+soportados en este momento.
 
 ## Tests
 
