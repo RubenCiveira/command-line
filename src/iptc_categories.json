@@ -1,0 +1,1228 @@
+{
+  "arts, culture, entertainment and media": {
+    "arts and entertainment": {
+      "animation": null,
+      "cartoon": null,
+      "cinema": null,
+      "dance": {
+        "ballet": null,
+        "modern dance": null,
+        "traditional dance": null
+      },
+      "fashion": {
+        "cosmetics": null,
+        "hairstyles": null,
+        "jewellery": null
+      },
+      "festival": {
+        "film festival": null
+      },
+      "literature": {
+        "drama (literature)": null,
+        "fiction": null,
+        "non-fiction": null,
+        "poetry": null
+      },
+      "music": {
+        "musical genre": null,
+        "musical instrument": null,
+        "musical performance": null
+      },
+      "series": null,
+      "theatre": {
+        "cabaret": null,
+        "drama (theatre)": null,
+        "musical": null,
+        "opera": null,
+        "operetta": null,
+        "stand-up comedy": null
+      },
+      "visual arts": {
+        "architecture": null,
+        "design (visual arts)": null,
+        "drawing": null,
+        "forging": null,
+        "painting": null,
+        "photography": null,
+        "sculpture": null,
+        "textile arts": null,
+        "woodworking": null
+      }
+    },
+    "culture": {
+      "art exhibition": null,
+      "cultural development": null,
+      "customs and tradition": null,
+      "festive event (culture)": null,
+      "language": null,
+      "library and museum": null,
+      "monument and heritage site": {
+        "restoration": null
+      }
+    },
+    "mass media": {
+      "disinformation and misinformation": null,
+      "news media": null,
+      "newspaper": null,
+      "online media outlet": null,
+      "periodical": null,
+      "radio": null,
+      "social media": {
+        "influencers": null
+      },
+      "television": null
+    }
+  },
+  "crime, law and justice": {
+    "crime": {
+      "animal abuse": null,
+      "arson": null,
+      "assault": {
+        "sex crime": null
+      },
+      "corporate crime": {
+        "accounting crime": null,
+        "anti-trust crime": null,
+        "breach of contract": null,
+        "embezzlement": null,
+        "insider trading": null,
+        "restraint of trade": null
+      },
+      "corruption": {
+        "bribery": null
+      },
+      "cyber crime": null,
+      "drug related crimes": {
+        "drug trafficking": null
+      },
+      "fraud": {
+        "tax evasion": null
+      },
+      "hijacking": null,
+      "homicide": null,
+      "human smuggling and trafficking": null,
+      "kidnapping": null,
+      "organised crime": {
+        "gang activity": null
+      },
+      "reckless driving": null,
+      "robbery and theft": null,
+      "shootings": null,
+      "terrorism": null,
+      "torture": null,
+      "vandalism": null,
+      "war crime": null
+    },
+    "judiciary": {
+      "suspended sentence": {
+        "appeal (court)": null,
+        "judge": null,
+        "supreme and high court": null,
+        "trial (court)": null
+      },
+      "out of court procedures": {
+        "arbitration and mediation": null
+      },
+      "prosecution and prosecutors": null
+    },
+    "law": {
+      "administrative law": null,
+      "civil law": {
+        "regulations": null
+      },
+      "criminal law": null,
+      "international law": {
+        "extradition": null,
+        "international court and tribunal": null
+      }
+    },
+    "law enforcement": {
+      "arrest": null,
+      "investigation (criminal)": {
+        "dropped criminal investigation": null,
+        "missing person": null
+      },
+      "police": null,
+      "surveillance": null
+    }
+  },
+  "disaster, accident and emergency incident": {
+    "accident and emergency incident": {
+      "drowning": null,
+      "explosion accident and incident": null,
+      "industrial accident and incident": {
+        "nuclear accident and incident": null
+      },
+      "structural failure": null,
+      "transportation accident and incident": {
+        "air and space accident and incident": null,
+        "maritime accident and incident": null,
+        "railway accident and incident": null,
+        "road accident and incident": null
+      }
+    },
+    "disaster": {
+      "famine": null,
+      "fire": {
+        "wildfire": null
+      },
+      "natural disaster": {
+        "drought": null,
+        "earthquake": null,
+        "flood": null,
+        "landslide": null,
+        "meteorological disaster": null,
+        "tsunami": null,
+        "volcanic eruption": null
+      }
+    },
+    "emergency response": null
+  },
+  "economy, business and finance": {
+    "business information": {
+      "business financing": {
+        "bankruptcy": null,
+        "crowdfunding": null,
+        "financially distressed company": null,
+        "stocks and securities": null
+      },
+      "business governance": {
+        "annual and special corporate meeting": null,
+        "annual report": null,
+        "board of directors": null,
+        "environmental, social and governance policy (ESG)": null,
+        "proxy filing": null,
+        "shareholder activity": null
+      },
+      "business reporting and performance": {
+        "corporate earnings": null,
+        "credit rating": null,
+        "financial statement": null
+      },
+      "business restructuring": {
+        "company spin-off": null,
+        "joint venture": null,
+        "leveraged buyout": null,
+        "management buyout": null,
+        "merger or acquisition": null
+      },
+      "business strategy and marketing": {
+        "client relationship management": null,
+        "commercial contract": null,
+        "economic globalisation": null,
+        "market research": null,
+        "market trend": null,
+        "new product or service": null,
+        "outsourcing": null,
+        "patent, copyright and trademark": null,
+        "product recall": null,
+        "public contract": null,
+        "research and development": null
+      },
+      "human resources": {
+        "executive officer": null,
+        "layoffs and downsizing": null
+      }
+    },
+    "economy": {
+      "macro economics": {
+        "bonds": null,
+        "budgets and budgeting": null,
+        "business enterprise": null,
+        "central bank": null,
+        "consumers": null,
+        "credit and debt": null,
+        "currency": null,
+        "deflation": null,
+        "economic growth": null,
+        "economic indicator": null,
+        "economic organisation": null,
+        "emerging market": null,
+        "employment statistics": null,
+        "exports": null,
+        "government aid": null,
+        "government debt": null,
+        "imports": null,
+        "inflation": null,
+        "interest rate": null,
+        "international economic institution": null,
+        "international trade": null,
+        "investments": null,
+        "monetary policy": null,
+        "mortgage": null,
+        "mutual funds": null,
+        "prices": null,
+        "recession": null,
+        "tariff": null
+      },
+      "sharing economy": null
+    },
+    "market and exchange": {
+      "commodity market": {
+        "energy market": null,
+        "metal": null
+      },
+      "debt market": null,
+      "foreign exchange market": null,
+      "loan market": {
+        "loans": null
+      }
+    },
+    "products and services": {
+      "agriculture": null,
+      "business service": {
+        "consultancy": null,
+        "employment agency": null,
+        "legal service": null,
+        "payment service": null,
+        "rental service": null,
+        "shipping and postal service": null,
+        "trade show or expo": null
+      },
+      "chemicals": null,
+      "commercial fishing": null,
+      "computing and information technology": {
+        "computer and telecommunications hardware": null,
+        "satellite technology": null,
+        "semiconductor and electronic component": null,
+        "software and applications": null,
+        "telecommunication service": null,
+        "wireless technology": null
+      },
+      "construction and property": {
+        "building material": null,
+        "commercial real estate": null,
+        "infrastructure projects": null,
+        "residential real estate": null
+      },
+      "consumer goods": {
+        "beverage and grocery": null,
+        "clothing": null,
+        "consumer electronics": null,
+        "furnishings and furniture": null,
+        "handicrafts": null,
+        "luxury good": null,
+        "pet product and service": null,
+        "tobacco and nicotine": null,
+        "toy and game": null
+      },
+      "energy and resource": {
+        "biofuel": null,
+        "coal": null,
+        "nuclear power": null,
+        "oil and gas": null,
+        "renewable energy": null
+      },
+      "financial service": {
+        "accountancy and auditing": null,
+        "asset management": null,
+        "banking": null,
+        "financial advisory service": null,
+        "insurance": null,
+        "personal finance and investment": null,
+        "stock broking": null
+      },
+      "forestry and timber": null,
+      "healthcare industry": {
+        "biotechnology business": null,
+        "health care provider": null,
+        "medical equipment": null,
+        "pharmaceutical": null
+      },
+      "manufacturing and engineering": {
+        "aerospace": null,
+        "automotive": null,
+        "defence equipment": null,
+        "electrical appliance": null,
+        "heavy engineering": null,
+        "machine manufacturing": null,
+        "railway manufacturing": null,
+        "shipbuilding": null
+      },
+      "media and entertainment industry": {
+        "advertising": null,
+        "books and publishing": null,
+        "film industry": null,
+        "music industry": null,
+        "news industry": null,
+        "podcast": null,
+        "public relations": null,
+        "radio industry": null,
+        "satellite and cable service": null,
+        "streaming service": null,
+        "television industry": null
+      },
+      "metal and mineral mining and refining": {
+        "precious material": null
+      },
+      "plastic": null,
+      "sales channel": {
+        "auction": null,
+        "retail": null,
+        "wholesale": null
+      },
+      "tourism and leisure industry": {
+        "casinos and gambling": null,
+        "hotel and accommodation": null,
+        "recreational and sporting goods": null,
+        "restaurant and catering": null,
+        "tour operator": null
+      },
+      "transport": {
+        "air transport": null,
+        "logistics": null,
+        "public transport": null,
+        "railway transport": null,
+        "road transport": null,
+        "shared transport": null,
+        "taxi and ride-hailing": null,
+        "waterway and maritime transport": null
+      },
+      "utilities": {
+        "electricity": null,
+        "heating and cooling": null,
+        "waste management": null,
+        "water supply": null
+      }
+    }
+  },
+  "education": {
+    "curriculum": null,
+    "educational grading": null,
+    "educational testing and examinations": null,
+    "entrance examination": null,
+    "online and remote learning": null,
+    "parents group": null,
+    "religious education": null,
+    "school": {
+      "adult and continuing education": null,
+      "college and university": null,
+      "early childhood education": null,
+      "independent school": null,
+      "lower secondary education": null,
+      "primary education": null,
+      "private school": null,
+      "religious school": null,
+      "state school": null,
+      "upper secondary education": null
+    },
+    "social learning": null,
+    "students": null,
+    "teachers": null,
+    "vocational education": null
+  },
+  "environment": {
+    "climate change": {
+      "global warming": null
+    },
+    "conservation": {
+      "energy saving": null,
+      "parks": null
+    },
+    "environmental pollution": {
+      "air pollution": null,
+      "environmental clean-up": null,
+      "hazardous materials": null,
+      "waste materials": null,
+      "water pollution": null
+    },
+    "natural resources": {
+      "energy resources": null,
+      "land resources": {
+        "forests": null,
+        "mountains": null
+      },
+      "population growth": null,
+      "water": {
+        "oceans": null,
+        "rivers": null,
+        "wetlands": null
+      }
+    },
+    "nature": {
+      "animal": {
+        "animal disease": null,
+        "pests": null
+      },
+      "ecosystem": null,
+      "endangered species": null,
+      "flowers and plants": {
+        "plant disease": null
+      },
+      "invasive species": null
+    },
+    "sustainability": null
+  },
+  "health": {
+    "disease and condition": {
+      "cancer": null,
+      "communicable disease": {
+        "epidemic and pandemic": null,
+        "viral disease": null
+      },
+      "developmental disorder": null,
+      "heart disease": null,
+      "injury": null,
+      "medical condition": {
+        "obesity": null
+      },
+      "mental health and disorder": {
+        "anxiety and stress": null,
+        "depression": null,
+        "eating disorder": null
+      },
+      "poisoning": null
+    },
+    "government health care": null,
+    "health facility": {
+      "healthcare clinic": null,
+      "hospital": null
+    },
+    "health insurance": null,
+    "health organisation": null,
+    "health treatment and procedure": {
+      "diet": {
+        "dietary supplement": null
+      },
+      "drug rehabilitation": null,
+      "emergency care": null,
+      "health care approach": {
+        "conventional medicine": null,
+        "herbal medicine": null,
+        "holistic medicine": null,
+        "traditional Chinese medicine": null
+      },
+      "medical test": null,
+      "non-prescription drug": null,
+      "prescription drug": null,
+      "surgery": null,
+      "therapy": null,
+      "vaccine": null
+    },
+    "medical profession": {
+      "medical service": null,
+      "medical specialisation": {
+        "dentistry": null,
+        "eye care": null,
+        "paediatrics": null,
+        "veterinary medicine": null
+      },
+      "medical staff": null
+    },
+    "private health care": null,
+    "public health": null
+  },
+  "human interest": {
+    "anniversary": null,
+    "award and prize": null,
+    "birthday": null,
+    "celebrity": null,
+    "ceremony": {
+      "funeral and memorial service": null,
+      "graduation": null,
+      "name ceremony": null,
+      "wedding": null
+    },
+    "high society": {
+      "royalty": null
+    },
+    "human mishap": null,
+    "record and achievement": null
+  },
+  "labour": {
+    "employment": {
+      "apprenticeship": null,
+      "child labour": null,
+      "commuting": null,
+      "employee": null,
+      "employer": null,
+      "employment training": null,
+      "parental leave": null,
+      "self-employment": null,
+      "volunteering": null,
+      "wages and benefits": {
+        "profit sharing": null,
+        "social security": null
+      }
+    },
+    "employment legislation": {
+      "workplace health and safety": null
+    },
+    "labour market": {
+      "gig economy": null
+    },
+    "labour relations": {
+      "collective agreements": null,
+      "labour dispute": {
+        "labour strike": null
+      }
+    },
+    "retirement": {
+      "pension": null
+    },
+    "unemployment": {
+      "unemployment benefits": null
+    },
+    "unions": null
+  },
+  "lifestyle and leisure": {
+    "leisure": {
+      "club and association": null,
+      "game": {
+        "board game": null,
+        "card game": null,
+        "children's game": null,
+        "dice game": null,
+        "outdoor game": null,
+        "puzzle": null,
+        "tile game": null,
+        "video game": null
+      },
+      "gaming and lottery": null,
+      "hobby": {
+        "automobile enthusiasm": null,
+        "bicycle enthusiasm": null,
+        "collecting": null,
+        "food and drink enthusiasm": null,
+        "motorcycle enthusiasm": null
+      },
+      "holiday": {
+        "Halloween": null,
+        "public holiday": null
+      },
+      "leisure venue": {
+        "amusement park": null,
+        "bar": null,
+        "cafe": null,
+        "nightclub": null,
+        "restaurant": null,
+        "zoo": null
+      },
+      "outdoor recreational activities": {
+        "fishing": null,
+        "horseback riding": null,
+        "hunting": null,
+        "recreational hiking and climbing": null,
+        "scuba diving": null
+      },
+      "travel and tourism": null
+    },
+    "lifestyle": {
+      "house and home": {
+        "gardening": null,
+        "home renovation": null,
+        "interior decoration": null
+      },
+      "organic food": null,
+      "party": null,
+      "trend": {
+        "body modification": null
+      }
+    },
+    "wellness": {
+      "exercise and fitness": null,
+      "mental wellbeing": null
+    }
+  },
+  "politics": {
+    "election": {
+      "church elections": null,
+      "citizens' initiative and recall": null,
+      "electoral system": null,
+      "intergovernmental elections": null,
+      "local elections": null,
+      "national elections": null,
+      "political campaigns": {
+        "campaign finance": null
+      },
+      "political candidates": null,
+      "political debates": null,
+      "primary elections": null,
+      "referenda": null,
+      "regional elections": null,
+      "voting": null
+    },
+    "fundamental rights": {
+      "censorship and freedom of speech": null,
+      "civil rights": null,
+      "freedom of religion": null,
+      "freedom of the press": null,
+      "human rights": null,
+      "privacy": null,
+      "women's rights": null
+    },
+    "government": {
+      "civil and public service": {
+        "civilian service": null,
+        "public employees": null,
+        "public officials": null
+      },
+      "constitution (law)": null,
+      "defence": {
+        "armed forces": null,
+        "military equipment": null,
+        "security measures (defence)": null
+      },
+      "espionage and intelligence": null,
+      "executive (government)": null,
+      "government budget": {
+        "public finance": null
+      },
+      "government department": null,
+      "heads of government": null,
+      "heads of state": null,
+      "impeachment": null,
+      "legislative body": {
+        "lower house (legislature)": null,
+        "upper house (legislature)": null
+      },
+      "local government and authority": null,
+      "minister and secretary (government)": null,
+      "national government": null,
+      "political committees": null,
+      "political convention": null,
+      "public inquiry": null,
+      "regional government and authority": null,
+      "regulatory authority": null
+    },
+    "government policy": {
+      "cultural policies": null,
+      "economic policy": {
+        "economic development incentive": null,
+        "nationalisation": null,
+        "privatisation": null,
+        "state-owned enterprise": null
+      },
+      "education policy": null,
+      "environmental policy": null,
+      "healthcare policy": null,
+      "interior policy": {
+        "data protection policy": null,
+        "housing and urban planning policy": null,
+        "infrastructure policy": null,
+        "integration policy": null,
+        "pension and welfare policy": null,
+        "personal data collection policy": null,
+        "personal weapon control policy": null,
+        "planning inquiries": null,
+        "policy towards indigenous people": null,
+        "regional development policy": null
+      },
+      "local government policy": null,
+      "migration policy": null,
+      "nuclear policy": null,
+      "regulation of industry": {
+        "food and drink regulations": null
+      },
+      "safety of citizens": null,
+      "sports policies": null,
+      "taxation": null
+    },
+    "international relations": {
+      "border disputes": null,
+      "diplomacy": {
+        "summit meetings": null,
+        "treaty": null
+      },
+      "economic sanction": null,
+      "foreign aid": null,
+      "international organisation": null,
+      "refugees and internally displaced people": null
+    },
+    "non-governmental organisation": null,
+    "political crisis": null,
+    "political dissent": null,
+    "political process": {
+      "lobbying": null,
+      "political development": null,
+      "political parties and movements": {
+        "political leadership": null
+      },
+      "political system": {
+        "democracy": null,
+        "dictatorship": null
+      }
+    }
+  },
+  "religion": {
+    "belief systems": {
+      "Buddhism": null,
+      "Christianity": {
+        "Catholicism": null,
+        "Christian Orthodoxy": null,
+        "Mormonism": null,
+        "Protestantism": null
+      },
+      "Confucianism": null,
+      "Hinduism": null,
+      "Islam": {
+        "Shia Islam": null,
+        "Sunni Islam": null
+      },
+      "Jainism": null,
+      "Judaism": {
+        "Hasidism": null
+      },
+      "Scientology": null,
+      "Shintoism": null,
+      "Sikhism": null,
+      "Taoism": null,
+      "Unificationism": null,
+      "Zoroastrianism": null,
+      "atheism and agnosticism": null,
+      "cult": null,
+      "nature religion": null
+    },
+    "relations between religion and government": null,
+    "religious conflict": null,
+    "religious facility": {
+      "church": null,
+      "mosque": null,
+      "synagogue": null
+    },
+    "religious festival and holiday": {
+      "All Saints Day": null,
+      "Christmas": null,
+      "Easter": null,
+      "Eid al-Adha": null,
+      "Hanukkah": null,
+      "Pentecost": null,
+      "Ramadan": null,
+      "Walpurgis night": null,
+      "Yom Kippur": null
+    },
+    "religious leader": {
+      "pope": null
+    },
+    "religious ritual": {
+      "baptism": null,
+      "bar and bat mitzvah": null,
+      "canonisation": null
+    },
+    "religious text": {
+      "Bible": null,
+      "Qur'an": null,
+      "Torah": null
+    }
+  },
+  "science and technology": {
+    "biomedical science": {
+      "biotechnology": null
+    },
+    "mathematics": null,
+    "natural science": {
+      "astronomy": null,
+      "biology": {
+        "botany": null,
+        "genetics": null,
+        "palaeontology": null,
+        "physiology": null,
+        "zoology": null
+      },
+      "chemistry": null,
+      "cosmology": null,
+      "geology": null,
+      "horticulture": null,
+      "marine science": null,
+      "meteorology": null,
+      "physics": {
+        "electromagnetism": null,
+        "nuclear physics": null
+      }
+    },
+    "scientific institution": null,
+    "scientific research": {
+      "medical research": null,
+      "scientific exploration": {
+        "space exploration": null
+      },
+      "scientific innovation": null,
+      "scientific publication": null
+    },
+    "scientific standards": null,
+    "social sciences": {
+      "anthropology": null,
+      "archaeology": null,
+      "economics": null,
+      "geography": null,
+      "history": null,
+      "information science": null,
+      "linguistics": null,
+      "philosophy": null,
+      "political science": null,
+      "psychology": null,
+      "sociology": null,
+      "study of law": null
+    },
+    "technology and engineering": {
+      "aerospace engineering": {
+        "rocketry": null
+      },
+      "agricultural technology": null,
+      "civil engineering": null,
+      "electronic engineering": null,
+      "identification technology": null,
+      "information technology and computer science": {
+        "artificial intelligence": null
+      },
+      "materials science": null,
+      "mechanical engineering": null,
+      "micro science": {
+        "nanotechnology": null
+      }
+    }
+  },
+  "society": {
+    "communities": {
+      "fraternal and community group": null,
+      "social networking": null
+    },
+    "demographics": {
+      "population and census": null
+    },
+    "discrimination": {
+      "ageism": null,
+      "racism": null,
+      "religious discrimination": null,
+      "sexism": null
+    },
+    "diversity, equity and inclusion": null,
+    "emigration": null,
+    "family": {
+      "Dating and Relationships": null,
+      "adoption": null,
+      "divorce": null,
+      "family planning": {
+        "abortion": null,
+        "contraception": null
+      },
+      "marriage": null,
+      "parenting": null,
+      "pregnancy and childbirth": null
+    },
+    "immigration": {
+      "illegal immigration": null
+    },
+    "mankind": {
+      "LGBTQ": null,
+      "adults": null,
+      "children": null,
+      "disabilities": null,
+      "gender": null,
+      "indigenous people": null,
+      "infants": null,
+      "men": null,
+      "national or ethnic minority": null,
+      "senior citizens": null,
+      "teenagers": null,
+      "women": null
+    },
+    "social condition": {
+      "homelessness": null,
+      "poverty": null
+    },
+    "social problem": {
+      "abusive behaviour": null,
+      "addiction": null,
+      "bullying": null,
+      "juvenile delinquency": null,
+      "prostitution": null,
+      "sexual misconduct": null,
+      "slavery": null
+    },
+    "values": {
+      "death and dying": {
+        "euthanasia": null,
+        "suicide": null
+      },
+      "ethics": null,
+      "pornography": null,
+      "sexual behaviour": null
+    },
+    "welfare": {
+      "charity": null,
+      "child care": null,
+      "elderly care": null,
+      "long-term care": null,
+      "public housing": null,
+      "social services": null
+    }
+  },
+  "sport": {
+    "competition discipline": {
+      "3x3 basketball": null,
+      "American football": null,
+      "Australian rules football": null,
+      "Canadian football": null,
+      "Gaelic football": null,
+      "Jai Alai (Pelota)": null,
+      "archery": {
+        "crossbow shooting": null,
+        "longbow": null
+      },
+      "arm wrestling": null,
+      "artistic swimming": {
+        "synchronised free routine": null,
+        "synchronised technical routine": null
+      },
+      "athletics": {
+        "cross-country run": null,
+        "decathlon": null,
+        "discus throw": null,
+        "hammer throw": null,
+        "heptathlon": null,
+        "high jump": null,
+        "hurdles": null,
+        "javelin throw": null,
+        "long distance run": null,
+        "long jump": null,
+        "middle distance run": null,
+        "pentathlon": null,
+        "pole vault": null,
+        "race walking": null,
+        "relay run": null,
+        "shot put": null,
+        "sprint run": null,
+        "steeplechase (athletics)": null,
+        "triple jump": null
+      },
+      "badminton": null,
+      "bandy": null,
+      "baseball": {
+        "rubberball baseball": null
+      },
+      "basketball": null,
+      "biathlon": null,
+      "billiards": null,
+      "bmx freesytle": null,
+      "bobsleigh": null,
+      "bodybuilding": null,
+      "boules": null,
+      "boxing": null,
+      "bullfighting": null,
+      "canoe slalom": null,
+      "canoe sprint": null,
+      "canoeing": null,
+      "casting (fishing)": null,
+      "cheerleading": null,
+      "chess": null,
+      "competitive dancing": null,
+      "cricket": null,
+      "croquet": null,
+      "curling": {
+        "icestock sport": null
+      },
+      "cycling": {
+        "artistic cycling": null,
+        "bmx racing": null,
+        "cycle ball": null,
+        "mountain biking": null
+      },
+      "darts": null,
+      "diving": {
+        "platform diving": null,
+        "springboard diving": null,
+        "synchronised diving": null
+      },
+      "dog racing": null,
+      "duathlon": null,
+      "eSports": null,
+      "equestrian": null,
+      "fencing": null,
+      "field hockey": null,
+      "figure skating": null,
+      "fist ball": null,
+      "floorball": null,
+      "flying disc": null,
+      "football 5-a-side": null,
+      "goalball": null,
+      "golf": {
+        "mini golf": null
+      },
+      "gymnastics": {
+        "artistic gymnastics": null,
+        "rhythmic gymnastics": null,
+        "trampoline": null
+      },
+      "handball (team)": null,
+      "hornuss": null,
+      "horse racing": null,
+      "hurling": null,
+      "ice hockey": {
+        "sledge hockey": null
+      },
+      "kabaddi": null,
+      "kayaking": null,
+      "kiting": null,
+      "lacrosse": null,
+      "luge": null,
+      "marathon": null,
+      "martial arts": {
+        "Taekwon-Do": null,
+        "judo": null,
+        "jukendo": null,
+        "karate": null,
+        "kendo": null,
+        "kickboxing": null,
+        "krav maga": null,
+        "kyudo": null,
+        "mixed martial arts": null,
+        "naginata": null,
+        "sambo (martial art)": null,
+        "wushu": null
+      },
+      "modern pentathlon": null,
+      "motor car racing": null,
+      "motorboat racing": null,
+      "motorcycling": null,
+      "mountain climbing": {
+        "ice climbing": null,
+        "mountaineering": null
+      },
+      "netball": null,
+      "orienteering": {
+        "ski orienteering": null
+      },
+      "padel": null,
+      "parachuting": null,
+      "polo": null,
+      "pool": null,
+      "power boating": null,
+      "racquetball": null,
+      "ringette": null,
+      "road cycling": null,
+      "rodeo": {
+        "bareback bronc": null,
+        "barrel racing": null,
+        "bull riding": null,
+        "bulldogging": null,
+        "calf roping": null,
+        "goat roping": null,
+        "saddle bronc": null
+      },
+      "roller sports": {
+        "roller hockey": null,
+        "skateboarding": null
+      },
+      "rowing": null,
+      "rugby": {
+        "rugby league": null,
+        "rugby sevens": null,
+        "rugby union": null
+      },
+      "sailing": null,
+      "sepak takraw": null,
+      "shinty": null,
+      "short track speed skating": null,
+      "skeleton": null,
+      "skiing": {
+        "Nordic combined": null,
+        "Telemark skiing": null,
+        "alpine skiing": null,
+        "cross-country skiing": null,
+        "freestyle skiing": null,
+        "grass skiing": null,
+        "ski jumping": null
+      },
+      "sky diving": null,
+      "snooker": null,
+      "snowboarding": null,
+      "soccer": null,
+      "softball": null,
+      "speed skating": null,
+      "sport climbing": null,
+      "sport shooting": null,
+      "squash": null,
+      "stand up paddleboarding (SUP)": null,
+      "sumo wrestling": null,
+      "surfing": null,
+      "swimming": {
+        "marathon swimming": null
+      },
+      "table tennis": null,
+      "ten pin bowling": null,
+      "tennis": null,
+      "track cycling": null,
+      "triathlon": null,
+      "tug-of-war": null,
+      "underwater sports": null,
+      "volleyball": {
+        "beach volleyball": null
+      },
+      "water polo": null,
+      "water skiing": null,
+      "weightlifting and powerlifting": null,
+      "windsurfing": null,
+      "wrestling": {
+        "Swiss wrestling": null,
+        "freestyle wrestling": null,
+        "greco-roman": null
+      }
+    },
+    "disciplinary action in sport": null,
+    "drug use in sport": null,
+    "sport achievement": {
+      "sports honour": null,
+      "sports medal and trophy": null,
+      "sports record": null
+    },
+    "sport event": {
+      "Olympic Games": null,
+      "Paralympic Games": null,
+      "final game": null,
+      "playoff championship": null,
+      "regular competition": null
+    },
+    "sport industry": null,
+    "sport organisation": null,
+    "sport venue": null,
+    "sports coaching": null,
+    "sports management and ownership": null,
+    "sports officiating": null,
+    "sports transaction": null
+  },
+  "conflict, war and peace": {
+    "act of terror": {
+      "act of bioterrorism": null,
+      "terrorist bombings": null
+    },
+    "armed conflict": {
+      "guerrilla activity": null,
+      "international military intervention": {
+        "peacekeeping force": null
+      },
+      "military occupation": null,
+      "missing in action": null,
+      "war": {
+        "civil war": null
+      }
+    },
+    "civil unrest": {
+      "demonstration": null,
+      "rebellion": null,
+      "revolution": null,
+      "riot": null
+    },
+    "coup d'etat": null,
+    "cyber warfare": null,
+    "massacre": {
+      "genocide": null
+    },
+    "peace process": {
+      "peace envoy": null,
+      "peace plan": null,
+      "peace talks": null
+    },
+    "post-war reconstruction": {
+      "disarmament": null,
+      "ordnance clearance": null
+    },
+    "prisoners of war": null
+  },
+  "weather": {
+    "weather forecast": null,
+    "weather phenomena": null,
+    "weather statistic": null,
+    "weather warning": null
+  }
+}

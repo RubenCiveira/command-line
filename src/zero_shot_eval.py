@@ -9,6 +9,8 @@ Uso:
     python src/zero_shot_eval.py
 """
 
+import json
+from pathlib import Path
 from transformers import pipeline
 from rich.console import Console
 from rich.table import Table
@@ -16,6 +18,7 @@ from rich.tree import Tree
 from rich.prompt import Prompt, IntPrompt
 
 console = Console()
+SCRIPT_DIR = Path(__file__).parent
 
 MODELS = [
     ("facebook/bart-large-mnli", "BART large, estándar de facto para zero-shot (solo inglés)"),
@@ -24,120 +27,18 @@ MODELS = [
 ]
 
 # Árbol jerárquico de categorías.
+# Se carga desde iptc_categories.json (taxonomía IPTC Media Topics).
 # Cada nodo es un dict: las claves son categorías y los valores son
 # sus subcategorías (dict) o None si es hoja.
-CATEGORY_TREE = {
-    "technology": {
-        "software development": {
-            "web development": None,
-            "mobile development": None,
-            "devops and infrastructure": None,
-            "databases": None,
-            "programming languages": None,
-            "software architecture": None,
-        },
-        "artificial intelligence": {
-            "machine learning": None,
-            "natural language processing": None,
-            "computer vision": None,
-            "robotics": None,
-        },
-        "cybersecurity": {
-            "network security": None,
-            "cryptography": None,
-            "ethical hacking": None,
-        },
-        "hardware and electronics": None,
-    },
-    "science": {
-        "physics": {
-            "classical mechanics": None,
-            "quantum physics": None,
-            "thermodynamics": None,
-            "astrophysics": None,
-        },
-        "chemistry": {
-            "organic chemistry": None,
-            "inorganic chemistry": None,
-            "biochemistry": None,
-        },
-        "biology": {
-            "genetics": None,
-            "ecology": None,
-            "microbiology": None,
-            "neuroscience": None,
-        },
-        "earth sciences": {
-            "geology": None,
-            "meteorology": None,
-            "oceanography": None,
-        },
-    },
-    "mathematics": {
-        "algebra": None,
-        "calculus and analysis": None,
-        "geometry and topology": None,
-        "statistics and probability": None,
-        "discrete mathematics": None,
-        "number theory": None,
-    },
-    "health and medicine": {
-        "diseases and conditions": None,
-        "nutrition and diet": None,
-        "mental health": None,
-        "pharmacology": None,
-        "fitness and exercise": None,
-        "first aid": None,
-    },
-    "business and finance": {
-        "accounting": None,
-        "investing and markets": None,
-        "entrepreneurship": None,
-        "management": None,
-        "marketing": None,
-        "economics": None,
-    },
-    "arts and entertainment": {
-        "music": {
-            "music theory": None,
-            "instruments": None,
-            "genres and artists": None,
-        },
-        "visual arts": None,
-        "cinema and television": None,
-        "literature": None,
-        "gaming": None,
-    },
-    "sports": {
-        "football": None,
-        "basketball": None,
-        "tennis": None,
-        "athletics": None,
-        "training and fitness": None,
-        "sports history": None,
-    },
-    "education": {
-        "teaching methods": None,
-        "curriculum design": None,
-        "e-learning": None,
-        "academic research": None,
-    },
-    "society": {
-        "politics": None,
-        "law and legislation": None,
-        "history": None,
-        "philosophy": None,
-        "religion": None,
-        "geography and travel": None,
-    },
-    "daily life": {
-        "cooking and recipes": None,
-        "home and garden": None,
-        "parenting": None,
-        "personal finance": None,
-        "transportation": None,
-    },
-}
+def _load_category_tree() -> dict:
+    json_path = SCRIPT_DIR / "iptc_categories.json"
+    if json_path.exists():
+        with open(json_path, encoding="utf-8") as f:
+            return json.load(f)
+    console.print(f"[red]No se encontró {json_path}[/red]")
+    raise SystemExit(1)
+
+CATEGORY_TREE = _load_category_tree()
 
 EXAMPLE_QUERIES = [
     "How do I fix a NullPointerException in Java?",
