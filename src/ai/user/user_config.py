@@ -16,6 +16,14 @@ class UserConfig:
         """Return the path to the SQLite RAG database file."""
         return Path.home() / ".config" / ".asistente" / "rag" / "knowledge.db"
 
+    def ragCategoriesPath(self) -> Path:
+        """Return the path to the IPTC categories JSON tree.
+
+        The file can be generated with build_iptc_tree.py and should be
+        copied to this location.
+        """
+        return Path.home() / ".config" / ".asistente" / "iptc_categories.json"
+
     def ragTopics(self) -> list[dict]:
         """Return the list of directories to watch for RAG ingestion.
 

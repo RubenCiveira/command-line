@@ -24,6 +24,7 @@ class RagRetriever:
         self,
         question: str,
         topics: list[str] | None = None,
+        categories: list[str] | None = None,
         k: int = 5,
     ) -> str:
         """Embed the question and return the top-k matching chunks.
@@ -31,7 +32,9 @@ class RagRetriever:
         Args:
             question: The user's query text.
             topics: Optional topic names to filter by.
-                    If None or empty, search across all topics.
+            categories: Optional category names to filter by.
+                        Matches documents that have any of the
+                        given categories at any level.
             k: Number of results to return.
 
         Returns:
@@ -44,7 +47,7 @@ class RagRetriever:
         setup = SqliteRagSetup(self.db_path)
         conn = setup.connect()
         try:
-            results = self._search(conn, query_vec, topics, k)
+            results = self._search(conn, query_vec, topics, categories, k)
             return "\n\n".join(results)
         finally:
             conn.close()
@@ -55,15 +58,40 @@ class RagRetriever:
         return self._model
 
     def _search(
-        self, conn, query_embedding, topics: list[str] | None, k: int,
+        self,
+        conn,
+        query_embedding,
+        topics: list[str] | None,
+        categories: list[str] | None,
+        k: int,
     ) -> List[str]:
         from sqlite_vec import serialize_float32
 
         vec_blob = serialize_float32(query_embedding.tolist())
 
-        if topics:
-            # Over-fetch from vector search, then filter by topic
+        has_topics = bool(topics)
+        has_categories = bool(categories)
+
+        # Build WHERE clauses for post-KNN filtering
+        filters: list[str] = []
+        params: list = [vec_blob, k * 5 if (has_topics or has_categories) else k]
+
+        if has_topics:
             placeholders = ",".join("?" * len(topics))
+            filters.append(f"d.topic IN ({placeholders})")
+            params.extend(topics)
+
+        if has_categories:
+            placeholders = ",".join("?" * len(categories))
+            filters.append(
+                f"d.id IN ("
+                f"SELECT document_id FROM document_categories "
+                f"WHERE category IN ({placeholders}))"
+            )
+            params.extend(categories)
+
+        if filters:
+            where_clause = "WHERE " + " AND ".join(filters)
             sql = f"""
                 SELECT c.content
                 FROM (
@@ -73,11 +101,11 @@ class RagRetriever:
                 ) AS vc
                 JOIN chunks c ON c.id = vc.rowid
                 JOIN documents d ON d.id = c.document_id
-                WHERE d.topic IN ({placeholders})
+                {where_clause}
                 ORDER BY vc.distance
                 LIMIT ?
             """
-            params: list = [vec_blob, k * 5] + topics + [k]
+            params.append(k)
         else:
             sql = """
                 SELECT c.content
@@ -89,7 +117,6 @@ class RagRetriever:
                 JOIN chunks c ON c.id = vc.rowid
                 ORDER BY vc.distance
             """
-            params = [vec_blob, k]
 
         rows = conn.execute(sql, params).fetchall()
         return [row[0] for row in rows]

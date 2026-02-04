@@ -13,6 +13,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ai.rag.sqlite_rag_setup import SqliteRagSetup
 from ai.rag.content_extractor import RagContentExtractor
+from ai.classificator import Classificator
 from ai.user.user_config import UserConfig
 
 logger = logging.getLogger(__name__)
@@ -28,11 +29,15 @@ class RagIngest:
         self.db_path = config.ragDatabasePath()
         self.topics = config.ragTopics()
         self._model: SentenceTransformer | None = None
+        self._classificator: Classificator | None = None
         self.extractor = RagContentExtractor()
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=900,
             chunk_overlap=150,
         )
+        categories_path = config.ragCategoriesPath()
+        if categories_path.exists():
+            self._classificator = Classificator(categories_path)
 
     def ingest(self) -> int:
         """Process all configured topic directories. Returns count of new docs."""
@@ -66,6 +71,7 @@ class RagIngest:
                         self._insert_chunk_and_embedding(
                             conn, document_id, chunk_text, embedding,
                         )
+                self._classify_and_store(conn, document_id, content)
                 conn.commit()
                 created += 1
                 logger.info("Ingested: %s/%s", topic_name, relative_path)
@@ -224,3 +230,29 @@ class RagIngest:
             "INSERT INTO vec_chunks (chunk_id, embedding) VALUES (?, ?)",
             (chunk_id, vec_blob),
         )
+
+    # ── Classification ───────────────────────────────────────────
+
+    def _classify_and_store(
+        self,
+        conn: sqlite3.Connection,
+        document_id: int,
+        content: str,
+    ) -> None:
+        if self._classificator is None:
+            return
+
+        # Use the first 2000 chars as sample for classification
+        sample = content[:2000]
+        try:
+            steps = self._classificator.classify(sample)
+        except Exception as exc:
+            logger.warning("Classification failed for doc %d: %s", document_id, exc)
+            return
+
+        for step in steps:
+            conn.execute(
+                "INSERT INTO document_categories "
+                "(document_id, level, category, score) VALUES (?, ?, ?, ?)",
+                (document_id, step["level"], step["label"], step["score"]),
+            )

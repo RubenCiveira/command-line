@@ -24,6 +24,7 @@ class SqliteRagSetup:
             self._ensure_documents_table(conn)
             self._ensure_chunks_table(conn)
             self._ensure_vec_table(conn)
+            self._ensure_document_categories_table(conn)
             conn.commit()
         finally:
             conn.close()
@@ -71,5 +72,27 @@ class SqliteRagSetup:
                 chunk_id INTEGER PRIMARY KEY,
                 embedding float[{self.VECTOR_DIMENSIONS}]
             )
+            """
+        )
+
+    def _ensure_document_categories_table(
+        self, conn: sqlite3.Connection,
+    ) -> None:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS document_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                document_id INTEGER NOT NULL
+                    REFERENCES documents(id) ON DELETE CASCADE,
+                level INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                score REAL NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_doc_categories_category
+            ON document_categories(category)
             """
         )
