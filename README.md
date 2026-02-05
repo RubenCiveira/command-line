@@ -150,6 +150,42 @@ El sistema actual no envia cabeceras de autorizacion para modelos de Hugging Fac
 Los modelos de `meta-llama` requieren autenticacion remota, por lo que no estan
 soportados en este momento.
 
+## Procesos principales
+
+### Categorizacion (IPTC)
+
+Se usa clasificacion zero-shot jerarquica basada en la taxonomia IPTC para:
+- etiquetar contenidos de RAG (ingesta y retrieval),
+- inferir el dominio de una consulta y filtrar contexto relevante.
+
+El pipeline baja nivel por nivel y se detiene si la confianza cae por debajo del umbral.
+
+### Deteccion de intencion
+
+Se clasifica la entrada del usuario para decidir si es:
+- un comando de shell,
+- una pregunta general,
+- o una tarea que debe enviarse a un skill.
+
+Este proceso permite enrutar la ejecucion hacia el agente adecuado.
+
+### Guardrail (prompt injection)
+
+Antes de enviar prompts al LLM, se aplica un clasificador de inyeccion que
+marca entradas sospechosas como bloqueadas. Incluye una evaluacion interactiva
+en `examples/guardrail_eval.py` para medir falsos positivos/negativos.
+
+### Seleccion de proyecto
+
+El resolutor de proyectos combina varias senales:
+- coincidencia por nombre y fuzzy matching,
+- clasificacion IPTC para filtrar proyectos por dominio,
+- embeddings del `detail` del proyecto para reordenar candidatos,
+- y confirmacion del usuario cuando hay dudas.
+
+El objetivo es mapear frases como "shell-back" o "actualiza la landing" al
+proyecto correcto de forma robusta.
+
 ## Tests
 
 ```bash
