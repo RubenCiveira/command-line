@@ -11,6 +11,7 @@ Uso:
 
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -25,6 +26,7 @@ from ai.model_pool import ModelPool
 from ai.user.user_config import UserConfig
 from ai.user.project_topic import ProjectTopic
 from ai.ui.cli_user_interface import CliUserInterface
+from ai.rag.project_detail_indexer import ProjectDetailIndexer
 
 console = Console()
 
@@ -59,6 +61,300 @@ CLASS_CANCER = [
     "cancer",
 ]
 
+
+def _detail(lines: list[str]) -> str:
+    return "\n".join(lines)
+
+
+DETAILS = {
+    "backend": _detail([
+        "overview: api para operaciones core del negocio",
+        "stack: fastapi, python, postgres",
+        "domain: usuarios, permisos, pagos",
+        "services: auth, billing, metrics",
+        "data: migraciones y seeds",
+        "infra: docker compose local",
+        "tests: pytest y coverage",
+        "docs: openapi y postman",
+        "ops: despliegue a staging",
+        "notes: foco en seguridad",
+    ]),
+    "frontend": _detail([
+        "overview: web app principal",
+        "stack: react, typescript",
+        "ui: tailwind y componentes",
+        "routing: react router",
+        "state: context y hooks",
+        "api: integracion con backend",
+        "tests: unit y e2e",
+        "build: vite",
+        "deploy: static hosting",
+        "notes: optimizacion de bundle",
+    ]),
+    "mobile": _detail([
+        "overview: app movil ios y android",
+        "stack: react native",
+        "features: login, perfil, notificaciones",
+        "api: consume endpoints REST",
+        "storage: secure storage",
+        "build: fastlane",
+        "tests: detox y unit",
+        "release: app store y play",
+        "ux: flows simplificados",
+        "notes: soporte offline",
+    ]),
+    "shell": _detail([
+        "overview: utilidades cli internas",
+        "stack: bash y python",
+        "commands: deploy, logs, cleanup",
+        "targets: dev y staging",
+        "config: env por proyecto",
+        "docs: help en cada comando",
+        "tests: scripts de smoke",
+        "release: versionado semantico",
+        "ops: soporte para equipos",
+        "notes: seguridad en sudo",
+    ]),
+    "sdk": _detail([
+        "overview: sdk para clientes",
+        "stack: python",
+        "features: auth, clientes, recursos",
+        "api: wrapper REST",
+        "docs: ejemplos y quickstart",
+        "tests: unit y integration",
+        "build: publish a pypi",
+        "versioning: semver",
+        "compat: python 3.10+",
+        "notes: errores tipados",
+    ]),
+    "campaigns": _detail([
+        "overview: campanas de marketing",
+        "stack: dashboards y reports",
+        "funnels: conversion y leads",
+        "ads: google y meta",
+        "tracking: utm y eventos",
+        "kpi: cpa y roi",
+        "tests: validacion de datos",
+        "docs: playbooks",
+        "ops: calendario editorial",
+        "notes: segmentacion",
+    ]),
+    "brand": _detail([
+        "overview: identidad de marca",
+        "assets: logo, colores, tipografia",
+        "guidelines: usos y restricciones",
+        "templates: presentaciones",
+        "design: iconografia",
+        "files: svg y png",
+        "docs: manual de marca",
+        "ops: aprobaciones",
+        "notes: consistencia visual",
+        "updates: rebrand anual",
+    ]),
+    "social": _detail([
+        "overview: contenido redes sociales",
+        "channels: instagram, twitter",
+        "calendar: planificacion semanal",
+        "assets: reels y posts",
+        "copy: mensajes y hashtags",
+        "metrics: alcance y engagement",
+        "ops: approvals",
+        "tools: scheduling",
+        "notes: respuesta a comentarios",
+        "experiments: a/b",
+    ]),
+    "website": _detail([
+        "overview: sitio corporativo",
+        "stack: wordpress",
+        "pages: landing y pricing",
+        "seo: keywords y metadata",
+        "forms: leads",
+        "assets: imagenes optimizadas",
+        "content: blog",
+        "ops: backups",
+        "notes: performance",
+        "analytics: GA",
+    ]),
+    "newsletter": _detail([
+        "overview: boletin semanal",
+        "platform: mailchimp",
+        "segments: usuarios activos",
+        "content: resumen de novedades",
+        "templates: branding",
+        "metrics: open y click rate",
+        "ops: listas y bajas",
+        "compliance: gdpr",
+        "notes: entregabilidad",
+        "automation: triggers",
+    ]),
+    "oncologia": _detail([
+        "overview: investigacion en oncologia",
+        "focus: inmunoterapia",
+        "data: cohortes clinicas",
+        "models: prediccion de respuesta",
+        "pipeline: preprocessing",
+        "metrics: supervivencia",
+        "tools: python y r",
+        "docs: informes",
+        "collab: hospital",
+        "notes: privacidad",
+    ]),
+    "neuroimagen": _detail([
+        "overview: analisis de neuroimagen",
+        "data: mri y ct",
+        "task: segmentacion",
+        "models: unet",
+        "pipeline: normalizacion",
+        "metrics: dice",
+        "tools: python",
+        "docs: protocolos",
+        "ops: gpu",
+        "notes: calidad de datos",
+    ]),
+    "genomica": _detail([
+        "overview: analisis genomico",
+        "data: variantes y gwas",
+        "pipeline: qc",
+        "tools: plink",
+        "models: asociacion",
+        "metrics: pvalues",
+        "docs: reportes",
+        "ops: storage",
+        "notes: reproducibilidad",
+        "collab: bioinfo",
+    ]),
+    "farma": _detail([
+        "overview: ensayos clinicos",
+        "phase: fase III",
+        "data: farmacocinetica",
+        "analysis: cohortes",
+        "metrics: eficacia",
+        "tools: sas",
+        "docs: protocolos",
+        "ops: auditoria",
+        "notes: regulatorio",
+        "reporting: clinico",
+    ]),
+    "epidemio": _detail([
+        "overview: epidemiologia",
+        "models: sir",
+        "data: vigilancia",
+        "analysis: brotes",
+        "tools: python",
+        "metrics: r0",
+        "docs: informes",
+        "ops: dashboards",
+        "notes: alertas",
+        "collab: salud publica",
+    ]),
+    "cuerdas": _detail([
+        "overview: teoria de cuerdas",
+        "focus: compactificaciones",
+        "math: calabi yau",
+        "tools: mathematica",
+        "analysis: espectro",
+        "notes: landscape",
+        "docs: papers",
+        "collab: grupo teorico",
+        "ops: simulaciones",
+        "targets: vacios",
+    ]),
+    "qcd-lattice": _detail([
+        "overview: qcd en red",
+        "sim: lattice",
+        "analysis: espectro hadronico",
+        "tools: c++",
+        "infra: cluster",
+        "metrics: observables",
+        "docs: notas",
+        "ops: colas",
+        "notes: precision",
+        "targets: masa",
+    ]),
+    "cosmologia": _detail([
+        "overview: cosmologia",
+        "focus: inflacion",
+        "data: perturbaciones",
+        "models: lcdm",
+        "tools: python",
+        "metrics: espectro",
+        "docs: articulos",
+        "ops: simulaciones",
+        "notes: energia oscura",
+        "targets: parametros",
+    ]),
+    "cuantica": _detail([
+        "overview: informacion cuantica",
+        "focus: entrelazamiento",
+        "codes: correccion",
+        "tools: python",
+        "analysis: cota",
+        "metrics: fidelidad",
+        "docs: notebooks",
+        "ops: simulaciones",
+        "notes: ruido",
+        "targets: superficies",
+    ]),
+    "gravedad": _detail([
+        "overview: gravedad cuantica",
+        "focus: lazos",
+        "analysis: agujeros negros",
+        "math: entropia",
+        "tools: python",
+        "docs: papers",
+        "ops: calculos",
+        "notes: termodinamica",
+        "targets: rotacion",
+        "collab: grupo teorico",
+    ]),
+    "data": _detail([
+        "overview: pipelines de datos",
+        "tools: dbt",
+        "sources: raw y staged",
+        "models: marts",
+        "quality: tests",
+        "ops: orquestacion",
+        "docs: lineage",
+        "metrics: freshness",
+        "notes: performance",
+        "targets: dashboards",
+    ]),
+    "infra": _detail([
+        "overview: infraestructura",
+        "tools: terraform",
+        "cluster: kubernetes",
+        "ops: autoscaling",
+        "security: iam",
+        "monitoring: prometheus",
+        "docs: runbooks",
+        "notes: costes",
+        "deploy: ci",
+        "targets: reliability",
+    ]),
+    "docs": _detail([
+        "overview: documentacion tecnica",
+        "tools: mkdocs",
+        "content: guias",
+        "api: referencias",
+        "ops: builds",
+        "reviews: semanales",
+        "notes: versionado",
+        "format: markdown",
+        "targets: onboarding",
+        "extras: diagramas",
+    ]),
+}
+
+
+def _project(name: str, path: str, description: str, classification: list[str]) -> ProjectTopic:
+    return ProjectTopic(
+        name=name,
+        path=path,
+        description=description,
+        classification=classification,
+        detail=DETAILS.get(name, ""),
+    )
+
 # ── Modelos zero-shot disponibles ─────────────────────────────────
 
 MODELS = [
@@ -80,124 +376,229 @@ MODELS = [
 
 PROJECT_SETS = {
     "Programacion": [
-        ProjectTopic(name="backend", path="/home/user/work/backend",
-                     description="REST API built with FastAPI and PostgreSQL",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="frontend", path="/home/user/work/frontend",
-                     description="React SPA with TypeScript and Tailwind",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="mobile", path="/home/user/work/mobile",
-                     description="React Native app for iOS and Android",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="shell", path="/home/user/work/shell",
-                     description="CLI utilities and shell scripts",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="sdk", path="/home/user/work/sdk",
-                     description="Python SDK for the public API",
-                     classification=CLASS_TECH),
+        _project(
+            "backend",
+            "/home/user/work/backend",
+            "REST API built with FastAPI and PostgreSQL",
+            CLASS_TECH,
+        ),
+        _project(
+            "frontend",
+            "/home/user/work/frontend",
+            "React SPA with TypeScript and Tailwind",
+            CLASS_TECH,
+        ),
+        _project(
+            "mobile",
+            "/home/user/work/mobile",
+            "React Native app for iOS and Android",
+            CLASS_TECH,
+        ),
+        _project(
+            "shell",
+            "/home/user/work/shell",
+            "CLI utilities and shell scripts",
+            CLASS_TECH,
+        ),
+        _project(
+            "sdk",
+            "/home/user/work/sdk",
+            "Python SDK for the public API",
+            CLASS_TECH,
+        ),
     ],
     "Marketing": [
-        ProjectTopic(name="campaigns", path="/home/user/marketing/campaigns",
-                     description="Marketing campaigns, funnels and analytics",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="brand", path="/home/user/marketing/brand",
-                     description="Brand guidelines, logos and design assets",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="social", path="/home/user/marketing/social",
-                     description="Social media content and scheduling",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="website", path="/home/user/marketing/website",
-                     description="Corporate website with WordPress",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="newsletter", path="/home/user/marketing/newsletter",
-                     description="Email newsletter with Mailchimp",
-                     classification=CLASS_MARKETING),
+        _project(
+            "campaigns",
+            "/home/user/marketing/campaigns",
+            "Marketing campaigns, funnels and analytics",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "brand",
+            "/home/user/marketing/brand",
+            "Brand guidelines, logos and design assets",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "social",
+            "/home/user/marketing/social",
+            "Social media content and scheduling",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "website",
+            "/home/user/marketing/website",
+            "Corporate website with WordPress",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "newsletter",
+            "/home/user/marketing/newsletter",
+            "Email newsletter with Mailchimp",
+            CLASS_MARKETING,
+        ),
     ],
     "Investigacion medica": [
-        ProjectTopic(name="oncologia", path="/home/user/research/oncologia",
-                     description="Modelos predictivos de respuesta a inmunoterapia",
-                     classification=CLASS_CANCER),
-        ProjectTopic(name="neuroimagen", path="/home/user/research/neuroimagen",
-                     description="Segmentacion de resonancias magneticas cerebrales con deep learning",
-                     classification=CLASS_MED_RESEARCH),
-        ProjectTopic(name="genomica", path="/home/user/research/genomica",
-                     description="Analisis de variantes geneticas y GWAS en cohortes poblacionales",
-                     classification=CLASS_MED_RESEARCH),
-        ProjectTopic(name="farma", path="/home/user/research/farma",
-                     description="Ensayos clinicos fase III y analisis farmacocinetico",
-                     classification=CLASS_MED_RESEARCH),
-        ProjectTopic(name="epidemio", path="/home/user/research/epidemio",
-                     description="Modelado epidemiologico y vigilancia de brotes",
-                     classification=CLASS_MED_RESEARCH),
+        _project(
+            "oncologia",
+            "/home/user/research/oncologia",
+            "Modelos predictivos de respuesta a inmunoterapia",
+            CLASS_CANCER,
+        ),
+        _project(
+            "neuroimagen",
+            "/home/user/research/neuroimagen",
+            "Segmentacion de resonancias magneticas cerebrales con deep learning",
+            CLASS_MED_RESEARCH,
+        ),
+        _project(
+            "genomica",
+            "/home/user/research/genomica",
+            "Analisis de variantes geneticas y GWAS en cohortes poblacionales",
+            CLASS_MED_RESEARCH,
+        ),
+        _project(
+            "farma",
+            "/home/user/research/farma",
+            "Ensayos clinicos fase III y analisis farmacocinetico",
+            CLASS_MED_RESEARCH,
+        ),
+        _project(
+            "epidemio",
+            "/home/user/research/epidemio",
+            "Modelado epidemiologico y vigilancia de brotes",
+            CLASS_MED_RESEARCH,
+        ),
     ],
     "Fisica teorica": [
-        ProjectTopic(name="cuerdas", path="/home/user/research/cuerdas",
-                     description="Compactificaciones de teoria de cuerdas y paisaje de vacios",
-                     classification=CLASS_PHYSICS),
-        ProjectTopic(name="qcd-lattice", path="/home/user/research/qcd-lattice",
-                     description="Simulaciones de QCD en red y espectro hadronico",
-                     classification=CLASS_PHYSICS),
-        ProjectTopic(name="cosmologia", path="/home/user/research/cosmologia",
-                     description="Energia oscura, inflacion y perturbaciones primordiales",
-                     classification=CLASS_COSMOLOGY),
-        ProjectTopic(name="cuantica", path="/home/user/research/cuantica",
-                     description="Informacion cuantica, entrelazamiento y codigos de correccion",
-                     classification=CLASS_PHYSICS),
-        ProjectTopic(name="gravedad", path="/home/user/research/gravedad",
-                     description="Gravedad cuantica de lazos y termodinamica de agujeros negros",
-                     classification=CLASS_PHYSICS),
+        _project(
+            "cuerdas",
+            "/home/user/research/cuerdas",
+            "Compactificaciones de teoria de cuerdas y paisaje de vacios",
+            CLASS_PHYSICS,
+        ),
+        _project(
+            "qcd-lattice",
+            "/home/user/research/qcd-lattice",
+            "Simulaciones de QCD en red y espectro hadronico",
+            CLASS_PHYSICS,
+        ),
+        _project(
+            "cosmologia",
+            "/home/user/research/cosmologia",
+            "Energia oscura, inflacion y perturbaciones primordiales",
+            CLASS_COSMOLOGY,
+        ),
+        _project(
+            "cuantica",
+            "/home/user/research/cuantica",
+            "Informacion cuantica, entrelazamiento y codigos de correccion",
+            CLASS_PHYSICS,
+        ),
+        _project(
+            "gravedad",
+            "/home/user/research/gravedad",
+            "Gravedad cuantica de lazos y termodinamica de agujeros negros",
+            CLASS_PHYSICS,
+        ),
     ],
     "Mixto (todos)": [
         # Programacion
-        ProjectTopic(name="backend", path="/home/user/work/backend",
-                     description="REST API built with FastAPI and PostgreSQL",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="frontend", path="/home/user/work/frontend",
-                     description="React SPA with TypeScript and Tailwind",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="mobile", path="/home/user/work/mobile",
-                     description="React Native app for iOS and Android",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="shell", path="/home/user/work/shell",
-                     description="CLI utilities and shell scripts",
-                     classification=CLASS_TECH),
+        _project(
+            "backend",
+            "/home/user/work/backend",
+            "REST API built with FastAPI and PostgreSQL",
+            CLASS_TECH,
+        ),
+        _project(
+            "frontend",
+            "/home/user/work/frontend",
+            "React SPA with TypeScript and Tailwind",
+            CLASS_TECH,
+        ),
+        _project(
+            "mobile",
+            "/home/user/work/mobile",
+            "React Native app for iOS and Android",
+            CLASS_TECH,
+        ),
+        _project(
+            "shell",
+            "/home/user/work/shell",
+            "CLI utilities and shell scripts",
+            CLASS_TECH,
+        ),
         # Marketing
-        ProjectTopic(name="campaigns", path="/home/user/marketing/campaigns",
-                     description="Marketing campaigns, funnels and analytics",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="brand", path="/home/user/marketing/brand",
-                     description="Brand guidelines, logos and design assets",
-                     classification=CLASS_MARKETING),
-        ProjectTopic(name="social", path="/home/user/marketing/social",
-                     description="Social media content and scheduling",
-                     classification=CLASS_MARKETING),
+        _project(
+            "campaigns",
+            "/home/user/marketing/campaigns",
+            "Marketing campaigns, funnels and analytics",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "brand",
+            "/home/user/marketing/brand",
+            "Brand guidelines, logos and design assets",
+            CLASS_MARKETING,
+        ),
+        _project(
+            "social",
+            "/home/user/marketing/social",
+            "Social media content and scheduling",
+            CLASS_MARKETING,
+        ),
         # Datos e infra
-        ProjectTopic(name="data", path="/home/user/work/data",
-                     description="Data pipelines and analytics with dbt",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="infra", path="/home/user/work/infra",
-                     description="Infrastructure as code with Terraform and K8s",
-                     classification=CLASS_TECH),
-        ProjectTopic(name="docs", path="/home/user/work/docs",
-                     description="Technical documentation with MkDocs",
-                     classification=CLASS_TECH),
+        _project(
+            "data",
+            "/home/user/work/data",
+            "Data pipelines and analytics with dbt",
+            CLASS_TECH,
+        ),
+        _project(
+            "infra",
+            "/home/user/work/infra",
+            "Infrastructure as code with Terraform and K8s",
+            CLASS_TECH,
+        ),
+        _project(
+            "docs",
+            "/home/user/work/docs",
+            "Technical documentation with MkDocs",
+            CLASS_TECH,
+        ),
         # Investigacion medica
-        ProjectTopic(name="oncologia", path="/home/user/research/oncologia",
-                     description="Modelos predictivos de respuesta a inmunoterapia",
-                     classification=CLASS_CANCER),
-        ProjectTopic(name="genomica", path="/home/user/research/genomica",
-                     description="Analisis de variantes geneticas y GWAS en cohortes poblacionales",
-                     classification=CLASS_MED_RESEARCH),
-        ProjectTopic(name="epidemio", path="/home/user/research/epidemio",
-                     description="Modelado epidemiologico y vigilancia de brotes",
-                     classification=CLASS_MED_RESEARCH),
+        _project(
+            "oncologia",
+            "/home/user/research/oncologia",
+            "Modelos predictivos de respuesta a inmunoterapia",
+            CLASS_CANCER,
+        ),
+        _project(
+            "genomica",
+            "/home/user/research/genomica",
+            "Analisis de variantes geneticas y GWAS en cohortes poblacionales",
+            CLASS_MED_RESEARCH,
+        ),
+        _project(
+            "epidemio",
+            "/home/user/research/epidemio",
+            "Modelado epidemiologico y vigilancia de brotes",
+            CLASS_MED_RESEARCH,
+        ),
         # Fisica teorica
-        ProjectTopic(name="cosmologia", path="/home/user/research/cosmologia",
-                     description="Energia oscura, inflacion y perturbaciones primordiales",
-                     classification=CLASS_COSMOLOGY),
-        ProjectTopic(name="cuantica", path="/home/user/research/cuantica",
-                     description="Informacion cuantica, entrelazamiento y codigos de correccion",
-                     classification=CLASS_PHYSICS),
+        _project(
+            "cosmologia",
+            "/home/user/research/cosmologia",
+            "Energia oscura, inflacion y perturbaciones primordiales",
+            CLASS_COSMOLOGY,
+        ),
+        _project(
+            "cuantica",
+            "/home/user/research/cuantica",
+            "Informacion cuantica, entrelazamiento y codigos de correccion",
+            CLASS_PHYSICS,
+        ),
     ],
 }
 
@@ -364,11 +765,15 @@ def show_pool_status(pool: ModelPool):
 class EvalConfig(UserConfig):
     """UserConfig override that injects a custom project list."""
 
-    def __init__(self, projects: list[ProjectTopic]):
+    def __init__(self, projects: list[ProjectTopic], db_path: Path):
         self._projects = projects
+        self._db_path = db_path
 
     def projectTopics(self) -> list[ProjectTopic]:
         return self._projects
+
+    def projectDatabasePath(self) -> Path:
+        return self._db_path
 
 
 # ── Acciones principales ──────────────────────────────────────────
@@ -377,17 +782,24 @@ def load_resolver(
     projects: list[ProjectTopic],
     model_name: str,
     pool: ModelPool,
+    db_path: Path,
 ) -> ProjectResolver | None:
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        config = EvalConfig(projects)
+        config = EvalConfig(projects, db_path)
         resolver = ProjectResolver(
             config,
             memory=None,
             model_pool=pool,
             ui=CliUserInterface(console),
         )
+        indexer = ProjectDetailIndexer(config.projectDatabasePath())
+        indexed = indexer.index_projects(projects)
+        if indexed:
+            console.print(
+                f"[dim]Detail embeddings indexados: {indexed}[/dim]"
+            )
         # Force pipeline load with a warmup query
         resolver.resolve("test")
         console.print("[green]Modelo cargado correctamente.[/green]\n")
@@ -483,6 +895,8 @@ def interactive_mode(resolver: ProjectResolver):
 # ── Main ──────────────────────────────────────────────────────────
 
 def main():
+    temp_dir = tempfile.TemporaryDirectory(prefix="project-resolver-")
+    temp_db_path = Path(temp_dir.name) / "project_details.db"
     pool = ModelPool()
     resolver = None
     current_model = None
@@ -529,7 +943,9 @@ def main():
                     console.print(
                         f"  [dim]Auto-seleccionado set: {current_set_name}[/dim]"
                     )
-                resolver = load_resolver(current_projects, model_name, pool)
+                resolver = load_resolver(
+                    current_projects, model_name, pool, temp_db_path,
+                )
                 if resolver:
                     current_model = model_name
             else:
@@ -553,7 +969,7 @@ def main():
                 # Reload resolver with new projects if model is selected
                 if current_model:
                     resolver = load_resolver(
-                        current_projects, current_model, pool,
+                        current_projects, current_model, pool, temp_db_path,
                     )
             else:
                 console.print("[red]Opcion no valida.[/red]")
@@ -583,6 +999,7 @@ def main():
 
         elif choice == "6":
             console.print("[dim]Saliendo...[/dim]")
+            temp_dir.cleanup()
             break
 
 

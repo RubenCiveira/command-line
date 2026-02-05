@@ -13,6 +13,8 @@ from ai.ui.user_interface import UserInterface
 class CliUserInterface(UserInterface):
     """Blocking CLI implementation that calls the callback immediately."""
 
+    _CANCEL = object()
+
     def __init__(self, console: Console | None = None) -> None:
         self._console = console or Console()
 
@@ -57,7 +59,7 @@ class CliUserInterface(UserInterface):
         for key, spec in props.items():
             title = spec.get("title", key)
             value = self._prompt_field(title, spec)
-            if value is None:
+            if value is self._CANCEL:
                 return None
             values[key] = value
         return values
@@ -72,16 +74,16 @@ class CliUserInterface(UserInterface):
 
             choice = Prompt.ask("Selecciona una opcion", default="").strip()
             if not choice:
-                return None
+                return self._CANCEL
             try:
                 idx = int(choice)
             except ValueError:
-                return None
+                return self._CANCEL
             if 1 <= idx <= len(options):
                 return options[idx - 1].get("const")
-            return None
+            return self._CANCEL
 
         text = Prompt.ask(f"{title} (vacio para cancelar)", default="").strip()
         if not text:
-            return None
+            return self._CANCEL
         return text

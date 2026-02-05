@@ -13,3 +13,4 @@ class ProjectTopic:
     path: str
     description: str
     classification: list[str] = field(default_factory=list)
+    detail: str = ""

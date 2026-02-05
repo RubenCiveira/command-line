@@ -42,6 +42,10 @@ class UserConfig:
         """Return the path to the SQLite RAG database file."""
         return Path.home() / ".cache" / ".asistente" / "rag" / "knowledge.db"
 
+    def projectDatabasePath(self) -> Path:
+        """Return the path to the SQLite RAG database file."""
+        return Path.home() / ".cache" / ".asistente" / "project" / "knowledge.db"
+
     def ragCategoriesPath(self) -> Path:
         """Return the path to the IPTC categories JSON tree.
 
@@ -96,6 +100,9 @@ class UserConfig:
             name = entry.get("name")
             path = entry.get("path")
             description = entry.get("description", "")
+            detail = entry.get("detail", "")
+            if detail is None:
+                detail = ""
             classification = entry.get("classification", [])
             if isinstance(classification, str):
                 classification = [classification]
@@ -109,6 +116,7 @@ class UserConfig:
                         path=str(path),
                         description=description,
                         classification=classification,
+                        detail=str(detail),
                     )
                 )
             else:

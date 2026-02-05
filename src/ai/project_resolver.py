@@ -53,6 +53,7 @@ class ProjectResolver:
         match is ambiguous.
         """
         projects = self._config.projectTopics()
+        project_db_path = self._config.projectDatabasePath()
 
         thought = ProjectResolverThought(
             query=message,
@@ -60,6 +61,7 @@ class ProjectResolver:
             memory=self._memory,
             model_pool=self._model_pool,
             categories_path=self._categories_path,
+            project_db_path=project_db_path,
         )
 
         return thought.resolve()
@@ -71,6 +73,7 @@ class ProjectResolver:
     ) -> None:
         """Resolve a project, requesting confirmation via UI when needed."""
         projects = self._config.projectTopics()
+        project_db_path = self._config.projectDatabasePath()
 
         thought = ProjectResolverThought(
             query=message,
@@ -78,6 +81,7 @@ class ProjectResolver:
             memory=self._memory,
             model_pool=self._model_pool,
             categories_path=self._categories_path,
+            project_db_path=project_db_path,
         )
 
         conclusion = thought.resolve()

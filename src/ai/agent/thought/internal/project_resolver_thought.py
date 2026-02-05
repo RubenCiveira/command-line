@@ -12,6 +12,7 @@ from ai.agent.thought.thought import Thought
 from ai.agent.thought.conclusion import Conclusion
 from ai.agent.thought.response import Response
 from ai.classificator import Classificator
+from ai.rag.project_detail_retriever import ProjectDetailRetriever
 from ai.user.project_topic import ProjectTopic
 
 if TYPE_CHECKING:
@@ -28,6 +29,8 @@ NO_RESPONSE_MIN_CONFIDENCE = 0.5
 HISTORY_BOOST = 0.15
 FUZZY_THRESHOLD = 0.6
 AMBIGUITY_GAP = 0.15
+EMBEDDING_MIN_SCORE = 0.45
+EMBEDDING_GAP = 0.1
 DEFAULT_CATEGORIES_PATH = (
     Path(__file__).resolve().parents[5] / "resources" / "iptc_categories.json"
 )
@@ -75,6 +78,7 @@ class ProjectResolverThought(Thought):
         min_confidence: float = MIN_CONFIDENCE,
         history_boost: float = HISTORY_BOOST,
         categories_path: Path | None = None,
+        project_db_path: Path | None = None,
     ) -> None:
         super().__init__("resolving_project")
         self._query = query
@@ -85,8 +89,10 @@ class ProjectResolverThought(Thought):
         self._min_confidence = min_confidence
         self._history_boost = history_boost
         self._categories_path = categories_path
+        self._project_db_path = project_db_path
         self._pipeline: Any | None = None
         self._classifier: Classificator | None = None
+        self._detail_retriever: ProjectDetailRetriever | None = None
 
     # ── Public ────────────────────────────────────────────────────
 
@@ -118,10 +124,19 @@ class ProjectResolverThought(Thought):
         if len(candidates) == 1:
             return Conclusion(proposal=candidates[0].name)
 
-        # Layer 3: zero-shot classification
+        # Layer 3: detail embeddings ranking
+        ranked = self._rank_by_detail_embeddings(candidates)
+        if ranked:
+            top = ranked[0]
+            runner_up = ranked[1]["score"] if len(ranked) > 1 else 0.0
+            if top["score"] >= EMBEDDING_MIN_SCORE and (top["score"] - runner_up) >= EMBEDDING_GAP:
+                return Conclusion(proposal=top["project"].name)
+            candidates = [entry["project"] for entry in ranked]
+
+        # Layer 4: zero-shot classification
         scored = self._zero_shot_classify(candidates)
 
-        # Layer 4: conversation history boost
+        # Layer 5: conversation history boost
         scored = self._apply_history_boost(scored)
 
         scored.sort(key=lambda e: e["score"], reverse=True)
@@ -139,7 +154,7 @@ class ProjectResolverThought(Thought):
         if top["score"] >= min_confidence and gap >= AMBIGUITY_GAP:
             return Conclusion(proposal=top["project"].name)
 
-        # Layer 5: ambiguous — attach doubts for user confirmation.
+        # Layer 6: ambiguous — attach doubts for user confirmation.
         # proposal carries the best guess so batch callers can use it.
         return Conclusion(
             proposal=top["project"].name,
@@ -250,7 +265,7 @@ class ProjectResolverThought(Thought):
     def _zero_shot_classify(
         self, candidates: list[ProjectTopic],
     ) -> list[dict]:
-        labels = [p.name for p in candidates]
+        labels = [self._build_label(p) for p in candidates]
 
         if len(labels) < 2:
             return (
@@ -262,11 +277,25 @@ class ProjectResolverThought(Thought):
         clf = self._get_pipeline()
         result = clf(self._query, candidate_labels=labels)
 
-        project_by_name = {p.name: p for p in candidates}
+        project_by_name = {self._build_label(p): p for p in candidates}
         return [
             {"project": project_by_name[label], "score": score}
             for label, score in zip(result["labels"], result["scores"])
         ]
+
+    def _build_label(self, project: ProjectTopic) -> str:
+        parts = [project.name]
+        if project.description:
+            parts.append(project.description)
+        if project.detail:
+            parts.append(self._detail_snippet(project.detail))
+        return ": ".join(parts)
+
+    def _detail_snippet(self, detail: str, max_chars: int = 360) -> str:
+        snippet = " ".join(line.strip() for line in detail.splitlines() if line.strip())
+        if len(snippet) <= max_chars:
+            return snippet
+        return snippet[: max_chars - 3] + "..."
 
     def _get_pipeline(self):
         if self._pipeline is None:
@@ -340,7 +369,7 @@ class ProjectResolverThought(Thought):
             "type": "object",
             "properties": {
                 "project": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "title": "\u00bfA qu\u00e9 proyecto te refieres?",
                     "oneOf": options,
                 },
@@ -361,3 +390,19 @@ class ProjectResolverThought(Thought):
 
         # Fallback: user typed something we don't recognise
         return Conclusion(proposal=chosen)
+
+    # ── Detail embeddings ranking ─────────────────────────────────
+
+    def _rank_by_detail_embeddings(
+        self, candidates: list[ProjectTopic],
+    ) -> list[dict]:
+        if not self._project_db_path:
+            return []
+        if not self._project_db_path.exists():
+            return []
+        if not any(p.detail for p in candidates):
+            return []
+        if self._detail_retriever is None:
+            self._detail_retriever = ProjectDetailRetriever(self._project_db_path)
+
+        return self._detail_retriever.rank_projects(self._query, candidates)
