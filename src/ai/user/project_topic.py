@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,3 +12,4 @@ class ProjectTopic:
     name: str
     path: str
     description: str
+    classification: list[str] = field(default_factory=list)

@@ -96,8 +96,21 @@ class UserConfig:
             name = entry.get("name")
             path = entry.get("path")
             description = entry.get("description", "")
+            classification = entry.get("classification", [])
+            if isinstance(classification, str):
+                classification = [classification]
+            if not isinstance(classification, list):
+                classification = []
+            classification = [str(item) for item in classification if item]
             if name and path:
-                projects.append(ProjectTopic(name=name, path=str(path), description=description))
+                projects.append(
+                    ProjectTopic(
+                        name=name,
+                        path=str(path),
+                        description=description,
+                        classification=classification,
+                    )
+                )
             else:
                 logger.warning("Skipping invalid project entry: %s", entry)
         return projects

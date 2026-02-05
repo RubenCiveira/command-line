@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ai.agent.thought.conclusion import Conclusion
@@ -19,7 +20,8 @@ class ProjectResolver:
     """Facade that maps a user message to a project.
 
     Wraps :class:`ProjectResolverThought` with the project list from
-    ``UserConfig`` and session history from ``UserMemory``.
+    ``UserConfig`` (including optional IPTC classification) and session
+    history from ``UserMemory``.
 
     For now, user confirmation is never requested (empty response) — the
     resolver always auto-selects the best candidate.  The ``doubts``
@@ -32,10 +34,12 @@ class ProjectResolver:
         config: UserConfig,
         memory: UserMemory | None = None,
         model_pool: ModelPool | None = None,
+        categories_path: Path | None = None,
     ) -> None:
         self._config = config
         self._memory = memory
         self._model_pool = model_pool
+        self._categories_path = categories_path
 
     def resolve(self, message: str) -> Conclusion:
         """Determine which project *message* refers to.
@@ -51,6 +55,7 @@ class ProjectResolver:
             projects=projects,
             memory=self._memory,
             model_pool=self._model_pool,
+            categories_path=self._categories_path,
         )
 
         return thought.resolve()

@@ -5,11 +5,13 @@ from __future__ import annotations
 import difflib
 import logging
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ai.agent.thought.thought import Thought
 from ai.agent.thought.conclusion import Conclusion
 from ai.agent.thought.response import Response
+from ai.classificator import Classificator
 from ai.user.project_topic import ProjectTopic
 
 if TYPE_CHECKING:
@@ -20,9 +22,15 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "MoritzLaurer/ModernBERT-large-zeroshot-v2.0"
 MIN_CONFIDENCE = 0.35
+CLASSIFICATION_MIN_CONFIDENCE = 0.35
+CLASSIFICATION_STRICT_CONFIDENCE = 0.55
+NO_RESPONSE_MIN_CONFIDENCE = 0.5
 HISTORY_BOOST = 0.15
 FUZZY_THRESHOLD = 0.6
 AMBIGUITY_GAP = 0.15
+DEFAULT_CATEGORIES_PATH = (
+    Path(__file__).resolve().parents[5] / "resources" / "iptc_categories.json"
+)
 
 
 class ProjectResolverThought(Thought):
@@ -66,6 +74,7 @@ class ProjectResolverThought(Thought):
         model_name: str = DEFAULT_MODEL,
         min_confidence: float = MIN_CONFIDENCE,
         history_boost: float = HISTORY_BOOST,
+        categories_path: Path | None = None,
     ) -> None:
         super().__init__("resolving_project")
         self._query = query
@@ -75,7 +84,9 @@ class ProjectResolverThought(Thought):
         self._model_name = model_name
         self._min_confidence = min_confidence
         self._history_boost = history_boost
+        self._categories_path = categories_path
         self._pipeline: Any | None = None
+        self._classifier: Classificator | None = None
 
     # ── Public ────────────────────────────────────────────────────
 
@@ -87,16 +98,30 @@ class ProjectResolverThought(Thought):
         if response and not response.is_empty:
             return self._apply_response(response)
 
+        no_response = response is not None and response.is_empty
+
         # Layer 1: keyword / fuzzy match
         keyword_matches = self._keyword_match()
         if len(keyword_matches) == 1:
             return Conclusion(proposal=keyword_matches[0].name)
 
-        # Layer 2: zero-shot classification
+        # Layer 2: classification-based filtering
         candidates = keyword_matches if keyword_matches else self._projects
+        candidates = self._filter_by_classification(
+            candidates,
+            min_confidence=(
+                CLASSIFICATION_STRICT_CONFIDENCE
+                if no_response
+                else CLASSIFICATION_MIN_CONFIDENCE
+            ),
+        )
+        if len(candidates) == 1:
+            return Conclusion(proposal=candidates[0].name)
+
+        # Layer 3: zero-shot classification
         scored = self._zero_shot_classify(candidates)
 
-        # Layer 3: conversation history boost
+        # Layer 4: conversation history boost
         scored = self._apply_history_boost(scored)
 
         scored.sort(key=lambda e: e["score"], reverse=True)
@@ -108,10 +133,13 @@ class ProjectResolverThought(Thought):
         runner_up = scored[1]["score"] if len(scored) > 1 else 0.0
         gap = top["score"] - runner_up
 
-        if top["score"] >= self._min_confidence and gap >= AMBIGUITY_GAP:
+        min_confidence = (
+            NO_RESPONSE_MIN_CONFIDENCE if no_response else self._min_confidence
+        )
+        if top["score"] >= min_confidence and gap >= AMBIGUITY_GAP:
             return Conclusion(proposal=top["project"].name)
 
-        # Layer 4: ambiguous — attach doubts for user confirmation.
+        # Layer 5: ambiguous — attach doubts for user confirmation.
         # proposal carries the best guess so batch callers can use it.
         return Conclusion(
             proposal=top["project"].name,
@@ -158,6 +186,64 @@ class ProjectResolverThought(Thought):
         if substring:
             return substring
         return fuzzy
+
+    # ── Layer 2: Classification filtering ─────────────────────────
+
+    def _filter_by_classification(
+        self, candidates: list[ProjectTopic], min_confidence: float,
+    ) -> list[ProjectTopic]:
+        query_path = self._classify_query_path(min_confidence)
+        if not query_path:
+            return candidates
+
+        scored: list[tuple[ProjectTopic, int]] = []
+        for project in candidates:
+            if not project.classification:
+                continue
+            depth = self._common_prefix_len(query_path, project.classification)
+            if depth > 0:
+                scored.append((project, depth))
+
+        if not scored:
+            return candidates
+
+        max_depth = max(depth for _, depth in scored)
+        return [project for project, depth in scored if depth == max_depth]
+
+    def _classify_query_path(self, min_confidence: float) -> list[str]:
+        if not any(p.classification for p in self._projects):
+            return []
+
+        categories_path = self._categories_path or DEFAULT_CATEGORIES_PATH
+        if not categories_path.exists():
+            return []
+
+        if self._classifier is None:
+            self._classifier = Classificator(
+                categories_path=categories_path,
+                model_name=self._model_name,
+                min_confidence=CLASSIFICATION_MIN_CONFIDENCE,
+            )
+
+        steps = self._classifier.classify(self._query, include_scores=True)
+        if not steps:
+            return []
+
+        last_score = steps[-1].get("score", 0.0)
+        if last_score < min_confidence:
+            return []
+
+        return [step["label"] for step in steps]
+
+    def _common_prefix_len(self, a: list[str], b: list[str]) -> int:
+        a_norm = [item.lower() for item in a]
+        b_norm = [item.lower() for item in b]
+        depth = 0
+        for left, right in zip(a_norm, b_norm):
+            if left != right:
+                break
+            depth += 1
+        return depth
 
     # ── Layer 2: Zero-shot classification ─────────────────────────
 
