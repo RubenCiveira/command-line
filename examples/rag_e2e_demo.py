@@ -32,6 +32,7 @@ from ai.rag.rag_ingest import RagIngest
 from ai.rag.rag_retriever import RagRetriever
 from ai.classificator import Classificator
 from ai.user.user_config import UserConfig
+from ai.user.rag_topic import RagTopic
 
 console = Console()
 
@@ -62,8 +63,8 @@ class DemoConfig(UserConfig):
     def ragCategoriesPath(self) -> Path:
         return self._categories_path
 
-    def ragTopics(self) -> list[dict]:
-        return [{"name": "demo", "path": str(self._directory)}]
+    def ragTopics(self) -> list[RagTopic]:
+        return [RagTopic(name="demo", path=str(self._directory))]
 
 
 def read_results_from_db(db_path: Path) -> dict:

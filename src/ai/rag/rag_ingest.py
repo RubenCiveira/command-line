@@ -117,15 +117,11 @@ class RagIngest:
     def _collect_files(self) -> list[tuple[str, Path, Path]]:
         files: list[tuple[str, Path, Path]] = []
         for topic in self.topics:
-            name = topic.get("name", "")
-            path_str = topic.get("path", "")
-            if not name or not path_str:
-                continue
-            topic_path = Path(path_str).expanduser()
+            topic_path = Path(topic.path).expanduser()
             if not topic_path.exists():
                 continue
             for file_path in self._iter_files(topic_path):
-                files.append((name, topic_path, file_path))
+                files.append((topic.name, topic_path, file_path))
         return files
 
     def _iter_files(self, root: Path) -> Iterable[Path]:
