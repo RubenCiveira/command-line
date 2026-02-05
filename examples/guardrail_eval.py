@@ -18,7 +18,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt, IntPrompt
 
-from ai.guardrails.llm_guard import LlmGuard
+from ai.guardrails import Guardrails
 
 console = Console()
 
@@ -106,11 +106,11 @@ INJECTION_EXAMPLES = [
 ]
 
 
-def load_guard(model_name: str) -> LlmGuard | None:
+def load_guard(model_name: str) -> Guardrails | None:
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        guard = LlmGuard(model_name=model_name)
+        guard = Guardrails(model_name=model_name)
         # Force pipeline load
         guard.check("test")
         console.print("[green]Modelo cargado correctamente.[/green]\n")
@@ -120,7 +120,7 @@ def load_guard(model_name: str) -> LlmGuard | None:
         return None
 
 
-def run_examples(guard: LlmGuard) -> None:
+def run_examples(guard: Guardrails) -> None:
     console.print()
 
     # ── Benign tests ──
@@ -200,7 +200,7 @@ def run_examples(guard: LlmGuard) -> None:
     console.print(Panel(summary, title="[bold]Resumen[/bold]", expand=False))
 
 
-def interactive_mode(guard: LlmGuard) -> None:
+def interactive_mode(guard: Guardrails) -> None:
     console.print(
         "\n[bold]Modo interactivo[/bold]"
         " — escribe un texto para evaluar (vacio para volver)\n"
@@ -222,7 +222,7 @@ def interactive_mode(guard: LlmGuard) -> None:
         console.print()
 
 
-def change_threshold(guard: LlmGuard) -> None:
+def change_threshold(guard: Guardrails) -> None:
     console.print(f"\n  Threshold actual: [yellow]{guard.threshold}[/yellow]")
     console.print("  [dim]Valores mas bajos son mas estrictos (mas falsos positivos).[/dim]")
     console.print("  [dim]Valores mas altos son mas permisivos (menos deteccion).[/dim]\n")

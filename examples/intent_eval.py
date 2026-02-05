@@ -2,13 +2,19 @@
 Evaluador interactivo de modelos de clasificación de intenciones de Hugging Face Hub.
 
 Uso:
-    python src/intent_eval.py
+    python examples/intent_eval.py
 """
 
-from transformers import pipeline
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, IntPrompt
+
+from ai.intention import Intention
 
 console = Console()
 
@@ -31,23 +37,18 @@ EXAMPLE_QUERIES = [
 ]
 
 
-def load_model(model_name: str):
+def load_classifier(model_name: str) -> Intention | None:
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        clf = pipeline("text-classification", model=model_name, top_k=None)
+        clf = Intention(model_name=model_name)
+        # Force pipeline load
+        clf.classify("test")
         console.print(f"[green]Modelo cargado correctamente.[/green]\n")
         return clf
     except Exception as e:
         console.print(f"[red]Error cargando modelo: {e}[/red]\n")
         return None
-
-
-def classify(clf, text: str) -> list[dict]:
-    results = clf(text)
-    if results and isinstance(results[0], list):
-        results = results[0]
-    return sorted(results, key=lambda x: x["score"], reverse=True)
 
 
 def show_results(query: str, results: list[dict], max_labels: int = 5):
@@ -62,21 +63,21 @@ def show_results(query: str, results: list[dict], max_labels: int = 5):
     console.print(table)
 
 
-def run_examples(clf):
+def run_examples(clf: Intention):
     console.print("\n[bold]Ejecutando queries de ejemplo...[/bold]\n")
     for query in EXAMPLE_QUERIES:
-        results = classify(clf, query)
+        results = clf.classify(query)
         show_results(query, results)
     console.print()
 
 
-def interactive_mode(clf):
+def interactive_mode(clf: Intention):
     console.print("\n[bold]Modo interactivo[/bold] — escribe una query para clasificar (vacío para volver)\n")
     while True:
         query = Prompt.ask("[cyan]Query[/cyan]")
         if not query.strip():
             break
-        results = classify(clf, query)
+        results = clf.classify(query)
         show_results(query, results)
 
 
@@ -107,7 +108,7 @@ def main():
             idx = IntPrompt.ask("Selecciona modelo", default=1)
             if 1 <= idx <= len(MODELS):
                 model_name = MODELS[idx - 1][0]
-                clf = load_model(model_name)
+                clf = load_classifier(model_name)
                 if clf:
                     current_model = model_name
             else:

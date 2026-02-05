@@ -10,12 +10,16 @@ Uso:
 """
 
 import json
+import sys
 from pathlib import Path
-from transformers import pipeline
 from rich.console import Console
 from rich.table import Table
 from rich.tree import Tree
 from rich.prompt import Prompt, IntPrompt
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
+from ai.classificator import Classificator
 
 console = Console()
 SCRIPT_DIR = Path(__file__).parent
@@ -65,60 +69,17 @@ def load_model(model_name: str):
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        clf = pipeline("zero-shot-classification", model=model_name)
+        categories_path = SCRIPT_DIR / ".." / "resources" / "iptc_categories.json"
+        clf = Classificator(
+            categories_path=categories_path,
+            model_name=model_name,
+            min_confidence=MIN_CONFIDENCE,
+        )
         console.print("[green]Modelo cargado correctamente.[/green]\n")
         return clf
     except Exception as e:
         console.print(f"[red]Error cargando modelo: {e}[/red]\n")
         return None
-
-
-def classify_flat(clf, text: str, categories: list[str]) -> dict:
-    return clf(text, candidate_labels=categories)
-
-
-def classify_hierarchical(clf, text: str, tree: dict, min_confidence: float = MIN_CONFIDENCE) -> list[dict]:
-    """
-    Clasifica un texto bajando por el árbol de categorías nivel a nivel.
-
-    Retorna una lista de dicts, uno por nivel, con:
-        {"level": int, "label": str, "score": float, "all": dict}
-    """
-    path = []
-    current = tree
-    level = 0
-
-    while current is not None:
-        labels = list(current.keys())
-        if len(labels) < 2:
-            # Un solo hijo: se selecciona directamente sin clasificar
-            if labels:
-                only_label = labels[0]
-                path.append({"level": level, "label": only_label, "score": 1.0, "all": {only_label: 1.0}})
-                current = current[only_label]
-                level += 1
-            else:
-                break
-            continue
-
-        result = clf(text, candidate_labels=labels)
-        scores = dict(zip(result["labels"], result["scores"]))
-        best_label = result["labels"][0]
-        best_score = result["scores"][0]
-
-        path.append({"level": level, "label": best_label, "score": best_score, "all": scores})
-
-        if best_score < min_confidence:
-            break
-
-        subtree = current.get(best_label)
-        if subtree is None:
-            break
-
-        current = subtree
-        level += 1
-
-    return path
 
 
 def show_hierarchical_result(query: str, path: list[dict]):
@@ -133,17 +94,21 @@ def show_hierarchical_result(query: str, path: list[dict]):
         table.add_column("Score", style="magenta", justify="right", min_width=8)
         table.add_column("", min_width=25)
 
-        sorted_scores = sorted(step["all"].items(), key=lambda x: x[1], reverse=True)
-        for label, score in sorted_scores[:5]:
-            bar_len = int(score * 25)
+        if "all" in step:
+            sorted_scores = sorted(step["all"].items(), key=lambda x: x[1], reverse=True)
+            for label, score in sorted_scores[:5]:
+                bar_len = int(score * 25)
+                bar = "█" * bar_len + "░" * (25 - bar_len)
+                if label == step["label"]:
+                    table.add_row(f"[bold green]{label}[/bold green]", f"{score:.4f}", bar)
+                else:
+                    table.add_row(label, f"{score:.4f}", bar)
+        else:
+            bar_len = int(step["score"] * 25)
             bar = "█" * bar_len + "░" * (25 - bar_len)
-            if label == step["label"]:
-                table.add_row(f"[bold green]{label}[/bold green]", f"{score:.4f}", bar)
-            else:
-                table.add_row(label, f"{score:.4f}", bar)
+            table.add_row(f"[bold green]{step['label']}[/bold green]", f"{step['score']:.4f}", bar)
 
         console.print(table)
-
     console.print()
 
 
@@ -161,20 +126,20 @@ def _build_rich_tree(parent, node: dict):
             _build_rich_tree(branch, children)
 
 
-def run_examples(clf, tree: dict):
+def run_examples(clf):
     console.print("\n[bold]Ejecutando queries de ejemplo (clasificación jerárquica)...[/bold]\n")
     for query in EXAMPLE_QUERIES:
-        path = classify_hierarchical(clf, query, tree)
+        path = clf.classify(query, include_scores=True)
         show_hierarchical_result(query, path)
 
 
-def interactive_mode(clf, tree: dict):
+def interactive_mode(clf):
     console.print("\n[bold]Modo interactivo[/bold] — escribe un texto para clasificar (vacío para volver)\n")
     while True:
         query = Prompt.ask("[cyan]Texto[/cyan]")
         if not query.strip():
             break
-        path = classify_hierarchical(clf, query, tree)
+        path = clf.classify(query, include_scores=True)
         show_hierarchical_result(query, path)
 
 
@@ -225,13 +190,13 @@ def main():
             if clf is None:
                 console.print("[red]Primero selecciona un modelo (opción 1).[/red]")
             else:
-                run_examples(clf, tree)
+                run_examples(clf)
 
         elif choice == "4":
             if clf is None:
                 console.print("[red]Primero selecciona un modelo (opción 1).[/red]")
             else:
-                interactive_mode(clf, tree)
+                interactive_mode(clf)
 
         elif choice == "5":
             console.print("[dim]Saliendo...[/dim]")

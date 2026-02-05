@@ -12,7 +12,7 @@ DEFAULT_MODEL = "protectai/deberta-v3-base-prompt-injection-v2"
 MAX_TOKENS = 512
 
 
-class LlmGuard:
+class Guardrails:
     """Detect prompt injection and jailbreak attempts.
 
     Uses Meta's Llama Prompt Guard 2 (86M params, mDeBERTa-based)

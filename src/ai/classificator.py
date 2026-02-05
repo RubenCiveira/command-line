@@ -36,7 +36,7 @@ class Classificator:
 
     # ── Public API ───────────────────────────────────────────────
 
-    def classify(self, text: str) -> list[dict]:
+    def classify(self, text: str, include_scores: bool = False) -> list[dict]:
         """Classify text through the category tree.
 
         Returns a list of dicts, one per level traversed:
@@ -47,7 +47,7 @@ class Classificator:
         """
         tree = self._get_tree()
         clf = self._get_pipeline()
-        return self._classify_hierarchical(clf, text, tree)
+        return self._classify_hierarchical(clf, text, tree, include_scores)
 
     def classify_path(self, text: str) -> str:
         """Convenience: return the classification as a ' > ' joined path.
@@ -88,7 +88,7 @@ class Classificator:
     # ── Hierarchical classification ──────────────────────────────
 
     def _classify_hierarchical(
-        self, clf, text: str, tree: dict,
+        self, clf, text: str, tree: dict, include_scores: bool,
     ) -> list[dict]:
         path: list[dict] = []
         current = tree
@@ -100,11 +100,14 @@ class Classificator:
             if len(labels) < 2:
                 if labels:
                     only_label = labels[0]
-                    path.append({
+                    step = {
                         "level": level,
                         "label": only_label,
                         "score": 1.0,
-                    })
+                    }
+                    if include_scores:
+                        step["all"] = {only_label: 1.0}
+                    path.append(step)
                     current = current[only_label]
                     level += 1
                 else:
@@ -115,11 +118,14 @@ class Classificator:
             best_label = result["labels"][0]
             best_score = result["scores"][0]
 
-            path.append({
+            step = {
                 "level": level,
                 "label": best_label,
                 "score": best_score,
-            })
+            }
+            if include_scores:
+                step["all"] = dict(zip(result["labels"], result["scores"]))
+            path.append(step)
 
             if best_score < self.min_confidence:
                 break
