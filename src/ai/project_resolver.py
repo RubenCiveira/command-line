@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from ai.agent.thought.conclusion import Conclusion
 from ai.agent.thought.internal.project_resolver_thought import (
     ProjectResolverThought,
 )
+from ai.agent.thought.response import Response
 from ai.user.user_config import UserConfig
+from ai.ui.user_interface import UserInterface
 
 if TYPE_CHECKING:
     from ai.model_pool import ModelPool
@@ -35,11 +37,13 @@ class ProjectResolver:
         memory: UserMemory | None = None,
         model_pool: ModelPool | None = None,
         categories_path: Path | None = None,
+        ui: UserInterface | None = None,
     ) -> None:
         self._config = config
         self._memory = memory
         self._model_pool = model_pool
         self._categories_path = categories_path
+        self._ui = ui
 
     def resolve(self, message: str) -> Conclusion:
         """Determine which project *message* refers to.
@@ -59,3 +63,30 @@ class ProjectResolver:
         )
 
         return thought.resolve()
+
+    def resolve_with_ui(
+        self,
+        message: str,
+        on_complete: Callable[[Conclusion], None],
+    ) -> None:
+        """Resolve a project, requesting confirmation via UI when needed."""
+        projects = self._config.projectTopics()
+
+        thought = ProjectResolverThought(
+            query=message,
+            projects=projects,
+            memory=self._memory,
+            model_pool=self._model_pool,
+            categories_path=self._categories_path,
+        )
+
+        conclusion = thought.resolve()
+        if conclusion.doubts and self._ui is not None:
+            def _handle_form(values: dict | None) -> None:
+                response = Response(answers=values or {})
+                on_complete(thought.resolve(response))
+
+            self._ui.request_form(conclusion.doubts, _handle_form)
+            return
+
+        on_complete(conclusion)

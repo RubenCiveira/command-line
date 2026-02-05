@@ -24,6 +24,7 @@ from ai.project_resolver import ProjectResolver
 from ai.model_pool import ModelPool
 from ai.user.user_config import UserConfig
 from ai.user.project_topic import ProjectTopic
+from ai.ui.cli_user_interface import CliUserInterface
 
 console = Console()
 
@@ -381,7 +382,12 @@ def load_resolver(
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
         config = EvalConfig(projects)
-        resolver = ProjectResolver(config, memory=None, model_pool=pool)
+        resolver = ProjectResolver(
+            config,
+            memory=None,
+            model_pool=pool,
+            ui=CliUserInterface(console),
+        )
         # Force pipeline load with a warmup query
         resolver.resolve("test")
         console.print("[green]Modelo cargado correctamente.[/green]\n")
@@ -398,9 +404,30 @@ def run_examples(resolver: ProjectResolver, active_projects: list[ProjectTopic])
     ok = 0
     total = len(EXAMPLE_QUERIES)
     for query, expected in EXAMPLE_QUERIES:
-        conclusion = resolver.resolve(query)
-        if show_resolve_result(query, conclusion, expected, active_names):
-            ok += 1
+        def _handle_conclusion(conclusion):
+            nonlocal ok
+            if show_resolve_result(query, conclusion, expected, active_names):
+                ok += 1
+
+        def _handle_conclusion_with_notice(conclusion):
+            _handle_conclusion(conclusion)
+
+        if resolver._ui is not None:
+            original_request_form = resolver._ui.request_form
+
+            def _wrap_request_form(schema, on_complete):
+                console.print(
+                    f"  [dim]Formulario para:[/dim] [cyan]{query}[/cyan]"
+                )
+                original_request_form(schema, on_complete)
+
+            resolver._ui.request_form = _wrap_request_form
+            try:
+                resolver.resolve_with_ui(query, _handle_conclusion_with_notice)
+            finally:
+                resolver._ui.request_form = original_request_form
+        else:
+            resolver.resolve_with_ui(query, _handle_conclusion_with_notice)
 
     miss = total - ok
     console.print()
@@ -420,18 +447,37 @@ def interactive_mode(resolver: ProjectResolver):
         query = Prompt.ask("[cyan]Mensaje[/cyan]")
         if not query.strip():
             break
-        conclusion = resolver.resolve(query)
-        project = conclusion.proposal or "(ninguno)"
-        has_doubts = conclusion.doubts is not None
+        def _handle_conclusion(conclusion):
+            project = conclusion.proposal or "(ninguno)"
+            has_doubts = conclusion.doubts is not None
 
-        if has_doubts:
-            console.print(f"  [yellow]Ambiguo[/yellow] -> [bold]{project}[/bold] (mejor candidato)")
-            options = conclusion.doubts["properties"]["project"]["oneOf"]
-            for opt in options:
-                console.print(f"    [dim]{opt['title']}[/dim]")
+            if has_doubts:
+                console.print(
+                    f"  [yellow]Ambiguo[/yellow] -> [bold]{project}[/bold]"
+                )
+                options = conclusion.doubts["properties"]["project"]["oneOf"]
+                for opt in options:
+                    console.print(f"    [dim]{opt['title']}[/dim]")
+            else:
+                console.print(f"  [green]Seguro[/green]  -> [bold]{project}[/bold]")
+            console.print()
+
+        if resolver._ui is not None:
+            original_request_form = resolver._ui.request_form
+
+            def _wrap_request_form(schema, on_complete):
+                console.print(
+                    f"  [dim]Formulario para:[/dim] [cyan]{query}[/cyan]"
+                )
+                original_request_form(schema, on_complete)
+
+            resolver._ui.request_form = _wrap_request_form
+            try:
+                resolver.resolve_with_ui(query, _handle_conclusion)
+            finally:
+                resolver._ui.request_form = original_request_form
         else:
-            console.print(f"  [green]Seguro[/green]  -> [bold]{project}[/bold]")
-        console.print()
+            resolver.resolve_with_ui(query, _handle_conclusion)
 
 
 # ── Main ──────────────────────────────────────────────────────────

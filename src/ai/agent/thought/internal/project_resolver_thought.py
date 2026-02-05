@@ -331,6 +331,11 @@ class ProjectResolverThought(Thought):
                 "title": f"{project.name} \u2014 {desc} ({score:.2f})",
             })
 
+        options.append({
+            "const": None,
+            "title": "Ninguno de los anteriores",
+        })
+
         return {
             "type": "object",
             "properties": {
@@ -347,7 +352,9 @@ class ProjectResolverThought(Thought):
 
     def _apply_response(self, response: Response) -> Conclusion:
         """Select the project named in the user's response."""
-        chosen = response.answers.get("project", "")
+        chosen = response.answers.get("project")
+        if chosen is None:
+            return Conclusion(proposal="")
         for project in self._projects:
             if project.name == chosen:
                 return Conclusion(proposal=project.name)
