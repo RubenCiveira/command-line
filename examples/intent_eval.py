@@ -15,6 +15,7 @@ from rich.table import Table
 from rich.prompt import Prompt, IntPrompt
 
 from ai.intention import Intention
+from ai.model_pool import ModelPool
 
 console = Console()
 
@@ -37,11 +38,11 @@ EXAMPLE_QUERIES = [
 ]
 
 
-def load_classifier(model_name: str) -> Intention | None:
+def load_classifier(model_name: str, pool: ModelPool) -> Intention | None:
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        clf = Intention(model_name=model_name)
+        clf = Intention(model_name=model_name, model_pool=pool)
         # Force pipeline load
         clf.classify("test")
         console.print(f"[green]Modelo cargado correctamente.[/green]\n")
@@ -81,14 +82,29 @@ def interactive_mode(clf: Intention):
         show_results(query, results)
 
 
+def show_pool_status(pool: ModelPool):
+    cached = pool.cached_keys
+    if not cached:
+        console.print("  [dim]Pool vacio[/dim]\n")
+        return
+    total_mib = pool.total_memory_bytes / 1024**2
+    max_mib = pool.max_memory_bytes / 1024**2
+    console.print(f"  Pool: [cyan]{len(cached)}[/cyan] modelos, [cyan]{total_mib:.0f}[/cyan] / [cyan]{max_mib:.0f}[/cyan] MiB")
+    for task, model in cached:
+        console.print(f"    [dim]{task}:[/dim] {model}")
+    console.print()
+
+
 def main():
+    pool = ModelPool()
     clf = None
     current_model = None
 
     while True:
         console.print("\n[bold]═══ Evaluador de Intent Classification ═══[/bold]\n")
         if current_model:
-            console.print(f"  Modelo activo: [green]{current_model}[/green]\n")
+            console.print(f"  Modelo activo: [green]{current_model}[/green]")
+        show_pool_status(pool)
 
         console.print("  [1] Seleccionar modelo")
         console.print("  [2] Ejecutar queries de ejemplo")
@@ -108,7 +124,7 @@ def main():
             idx = IntPrompt.ask("Selecciona modelo", default=1)
             if 1 <= idx <= len(MODELS):
                 model_name = MODELS[idx - 1][0]
-                clf = load_classifier(model_name)
+                clf = load_classifier(model_name, pool)
                 if clf:
                     current_model = model_name
             else:

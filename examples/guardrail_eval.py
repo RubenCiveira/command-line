@@ -19,6 +19,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt, IntPrompt
 
 from ai.guardrails import Guardrails
+from ai.model_pool import ModelPool
 
 console = Console()
 
@@ -106,11 +107,11 @@ INJECTION_EXAMPLES = [
 ]
 
 
-def load_guard(model_name: str) -> Guardrails | None:
+def load_guard(model_name: str, pool: ModelPool) -> Guardrails | None:
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
-        guard = Guardrails(model_name=model_name)
+        guard = Guardrails(model_name=model_name, model_pool=pool)
         # Force pipeline load
         guard.check("test")
         console.print("[green]Modelo cargado correctamente.[/green]\n")
@@ -238,7 +239,21 @@ def change_threshold(guard: Guardrails) -> None:
         console.print("[red]Valor no valido.[/red]")
 
 
+def show_pool_status(pool: ModelPool):
+    cached = pool.cached_keys
+    if not cached:
+        console.print("  [dim]Pool vacio[/dim]\n")
+        return
+    total_mib = pool.total_memory_bytes / 1024**2
+    max_mib = pool.max_memory_bytes / 1024**2
+    console.print(f"  Pool: [cyan]{len(cached)}[/cyan] modelos, [cyan]{total_mib:.0f}[/cyan] / [cyan]{max_mib:.0f}[/cyan] MiB")
+    for task, model in cached:
+        console.print(f"    [dim]{task}:[/dim] {model}")
+    console.print()
+
+
 def main():
+    pool = ModelPool()
     guard = None
     current_model = None
 
@@ -248,7 +263,7 @@ def main():
             console.print(f"  Modelo activo: [green]{current_model}[/green]")
             if guard:
                 console.print(f"  Threshold:     [yellow]{guard.threshold}[/yellow]")
-        console.print()
+        show_pool_status(pool)
 
         console.print("  [1] Seleccionar modelo")
         console.print("  [2] Ejecutar bateria de pruebas")
@@ -269,7 +284,7 @@ def main():
             idx = IntPrompt.ask("Selecciona modelo", default=1)
             if 1 <= idx <= len(MODELS):
                 model_name = MODELS[idx - 1][0]
-                guard = load_guard(model_name)
+                guard = load_guard(model_name, pool)
                 if guard:
                     current_model = model_name
             else:

@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ai.model_pool import ModelPool
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +31,13 @@ class Guardrails:
         threshold: float = 0.5,
         use_heuristics: bool = True,
         heuristic_score: float = 0.75,
+        model_pool: ModelPool | None = None,
     ) -> None:
         self.model_name = model_name
         self.threshold = threshold
         self.use_heuristics = use_heuristics
         self.heuristic_score = heuristic_score
+        self._model_pool = model_pool
         self._pipeline: Any | None = None
         self._benign_labels: set[str] | None = None
         self._heuristic_patterns = self._build_heuristic_patterns()
@@ -99,13 +104,18 @@ class Guardrails:
 
     def _get_pipeline(self):
         if self._pipeline is None:
-            from transformers import pipeline
+            if self._model_pool is not None:
+                self._pipeline = self._model_pool.get_or_load(
+                    "text-classification", self.model_name,
+                )
+            else:
+                from transformers import pipeline
 
-            logger.info("Loading guard model: %s", self.model_name)
-            self._pipeline = pipeline(
-                "text-classification",
-                model=self.model_name,
-            )
+                logger.info("Loading guard model: %s", self.model_name)
+                self._pipeline = pipeline(
+                    "text-classification",
+                    model=self.model_name,
+                )
             self._benign_labels = self._build_benign_labels(self._pipeline)
         return self._pipeline
 

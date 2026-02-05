@@ -20,6 +20,7 @@ from rich.prompt import Prompt, IntPrompt
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from ai.classificator import Classificator
+from ai.model_pool import ModelPool
 
 console = Console()
 SCRIPT_DIR = Path(__file__).parent
@@ -65,7 +66,7 @@ EXAMPLE_QUERIES = [
 MIN_CONFIDENCE = 0.3  # Umbral mínimo para bajar al siguiente nivel
 
 
-def load_model(model_name: str):
+def load_model(model_name: str, pool: ModelPool):
     console.print(f"\n[yellow]Cargando modelo:[/yellow] {model_name}")
     console.print("[dim]Esto puede tardar la primera vez (descarga de pesos)...[/dim]")
     try:
@@ -74,6 +75,7 @@ def load_model(model_name: str):
             categories_path=categories_path,
             model_name=model_name,
             min_confidence=MIN_CONFIDENCE,
+            model_pool=pool,
         )
         console.print("[green]Modelo cargado correctamente.[/green]\n")
         return clf
@@ -143,7 +145,21 @@ def interactive_mode(clf):
         show_hierarchical_result(query, path)
 
 
+def show_pool_status(pool: ModelPool):
+    cached = pool.cached_keys
+    if not cached:
+        console.print("  [dim]Pool vacio[/dim]\n")
+        return
+    total_mib = pool.total_memory_bytes / 1024**2
+    max_mib = pool.max_memory_bytes / 1024**2
+    console.print(f"  Pool: [cyan]{len(cached)}[/cyan] modelos, [cyan]{total_mib:.0f}[/cyan] / [cyan]{max_mib:.0f}[/cyan] MiB")
+    for task, model in cached:
+        console.print(f"    [dim]{task}:[/dim] {model}")
+    console.print()
+
+
 def main():
+    pool = ModelPool()
     clf = None
     current_model = None
     tree = CATEGORY_TREE
@@ -156,7 +172,8 @@ def main():
         top_count = len(tree)
         total = _count_leaves(tree)
         console.print(f"  Categorías:    [cyan]{top_count}[/cyan] raíz, [cyan]{total}[/cyan] hojas totales")
-        console.print(f"  Confianza mín: [yellow]{MIN_CONFIDENCE}[/yellow]\n")
+        console.print(f"  Confianza mín: [yellow]{MIN_CONFIDENCE}[/yellow]")
+        show_pool_status(pool)
 
         console.print("  [1] Seleccionar modelo")
         console.print("  [2] Ver árbol de categorías")
@@ -177,7 +194,7 @@ def main():
             idx = IntPrompt.ask("Selecciona modelo", default=1)
             if 1 <= idx <= len(MODELS):
                 model_name = MODELS[idx - 1][0]
-                clf = load_model(model_name)
+                clf = load_model(model_name, pool)
                 if clf:
                     current_model = model_name
             else:

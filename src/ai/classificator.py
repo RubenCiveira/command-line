@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ai.model_pool import ModelPool
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +30,12 @@ class Classificator:
         categories_path: Path,
         model_name: str = DEFAULT_MODEL,
         min_confidence: float = MIN_CONFIDENCE,
+        model_pool: ModelPool | None = None,
     ) -> None:
         self.categories_path = categories_path
         self.model_name = model_name
         self.min_confidence = min_confidence
+        self._model_pool = model_pool
         self._pipeline: Any | None = None
         self._tree: dict | None = None
 
@@ -77,12 +82,17 @@ class Classificator:
 
     def _get_pipeline(self):
         if self._pipeline is None:
-            from transformers import pipeline
+            if self._model_pool is not None:
+                self._pipeline = self._model_pool.get_or_load(
+                    "zero-shot-classification", self.model_name,
+                )
+            else:
+                from transformers import pipeline
 
-            logger.info("Loading zero-shot model: %s", self.model_name)
-            self._pipeline = pipeline(
-                "zero-shot-classification", model=self.model_name,
-            )
+                logger.info("Loading zero-shot model: %s", self.model_name)
+                self._pipeline = pipeline(
+                    "zero-shot-classification", model=self.model_name,
+                )
         return self._pipeline
 
     # ── Hierarchical classification ──────────────────────────────

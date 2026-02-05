@@ -16,6 +16,11 @@ from ai.rag.content_extractor import RagContentExtractor
 from ai.classificator import Classificator
 from ai.user.user_config import UserConfig
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ai.model_pool import ModelPool
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +29,7 @@ class RagIngest:
 
     MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-    def __init__(self, config: UserConfig) -> None:
+    def __init__(self, config: UserConfig, model_pool: ModelPool | None = None) -> None:
         self.config = config
         self.db_path = config.ragDatabasePath()
         self.topics = config.ragTopics()
@@ -37,7 +42,7 @@ class RagIngest:
         )
         categories_path = config.ragCategoriesPath()
         if categories_path.exists():
-            self._classificator = Classificator(categories_path)
+            self._classificator = Classificator(categories_path, model_pool=model_pool)
 
     def ingest(self) -> int:
         """Process all configured topic directories. Returns count of new docs."""

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ai.model_pool import ModelPool
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +24,11 @@ class Intention:
         self,
         model_name: str = DEFAULT_MODEL,
         max_labels: int = 5,
+        model_pool: ModelPool | None = None,
     ) -> None:
         self.model_name = model_name
         self.max_labels = max_labels
+        self._model_pool = model_pool
         self._pipeline: Any | None = None
 
     # ── Public API ───────────────────────────────────────────────
@@ -58,12 +63,18 @@ class Intention:
 
     def _get_pipeline(self):
         if self._pipeline is None:
-            from transformers import pipeline
+            if self._model_pool is not None:
+                self._pipeline = self._model_pool.get_or_load(
+                    "text-classification", self.model_name,
+                    top_k=None,
+                )
+            else:
+                from transformers import pipeline
 
-            logger.info("Loading intent model: %s", self.model_name)
-            self._pipeline = pipeline(
-                "text-classification",
-                model=self.model_name,
-                top_k=None,
-            )
+                logger.info("Loading intent model: %s", self.model_name)
+                self._pipeline = pipeline(
+                    "text-classification",
+                    model=self.model_name,
+                    top_k=None,
+                )
         return self._pipeline
