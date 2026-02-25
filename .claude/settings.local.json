@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 examples/forge/agent_demo.py)",
+      "Bash(python3 -m pip install pyyaml -q)",
+      "Bash(.venv/bin/python examples/forge/agent_demo.py)",
+      "Bash(.venv/bin/python -:*)"
+    ]
+  }
+}
