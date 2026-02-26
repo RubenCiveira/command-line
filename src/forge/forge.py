@@ -17,6 +17,7 @@ Working-dir definitions take priority over global ones when names clash.
 from __future__ import annotations
 
 import re
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +25,7 @@ import yaml
 
 from forge.agent.factory import ForgeAgentFactory
 from forge.config.user_config import UserConfig, UserConfigStore
-from forge.events.observer import ForgeObserver, VerboseObserver
+from forge.events.observer import ConsoleProgressObserver, ForgeObserver, VerboseObserver
 from forge.llm.llm_factory import LLMFactory
 from forge.permission.console_broker import ConsolePermissionBroker
 from forge.permission.file_store import FilePermissionStore
@@ -33,6 +34,10 @@ from forge.playbook.playbook import ForgePlaybookFactory
 
 _DEFAULT_BRAIN_DIR = Path(__file__).parent / "brain"
 _FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+
+
+def _extract_content(response: Any) -> str:
+    return response.content if hasattr(response, "content") else str(response)
 
 
 class Forge:
@@ -60,6 +65,7 @@ class Forge:
         user_config_store: UserConfigStore | None = None,
         observers: list[ForgeObserver] | None = None,
         verbose: bool = False,
+        progress: bool = True,
     ) -> None:
         self._working_dir: Path | None = Path(working_dir).resolve() if working_dir else None
         self._global_dir: Path | None = Path(global_dir).resolve() if global_dir else None
@@ -69,6 +75,11 @@ class Forge:
         self._observers: list[ForgeObserver] = list(observers or [])
         if verbose:
             self._observers.append(VerboseObserver())
+        elif progress:
+            # Show brief status by default so the user sees what's happening
+            # even without --verbose.  Suppressed when verbose is on because
+            # VerboseObserver already provides more detail.
+            self._observers.append(ConsoleProgressObserver())
 
         user_config: UserConfig = user_config_store.load() if user_config_store else UserConfig()
 
@@ -152,21 +163,45 @@ class Forge:
         return f"Unknown handler: '{name}'"
 
     def invoke_agent(self, name: str, message: str) -> str:
-        """Directly invoke the named agent with *message*."""
+        """Directly invoke the named agent with *message* in a background thread."""
         path = self._agent_paths[name]
         agent = self._agent_factory.from_markdown(path)
-        result = agent.invoke(message)
-        return result.content if hasattr(result, "content") else str(result)
+        return self._run_in_thread(lambda: agent.invoke(message), _extract_content)
 
     def invoke_playbook(self, name: str, message: str) -> str:
-        """Directly invoke the named playbook with *message*."""
+        """Directly invoke the named playbook with *message* in a background thread."""
         path = self._playbook_paths[name]
         playbook = self._playbook_factory.from_markdown(path)
-        context = playbook.invoke(message)
-        last_unit = playbook.config.units[-1]
-        if isinstance(last_unit, list):
-            return "\n\n".join(context.get(s.name, "") for s in last_unit)
-        return context.get(last_unit.name, "")
+
+        def _run() -> str:
+            context = playbook.invoke(message)
+            last_unit = playbook.config.units[-1]
+            if isinstance(last_unit, list):
+                return "\n\n".join(context.get(s.name, "") for s in last_unit)
+            return context.get(last_unit.name, "")
+
+        return self._run_in_thread(_run)
+
+    @staticmethod
+    def _run_in_thread(fn: Any, postprocess: Any = None) -> Any:
+        """Run *fn* in a daemon thread and return its result (or re-raise its exception)."""
+        result_box: list[Any] = []
+        error_box: list[BaseException] = []
+
+        def _target() -> None:
+            try:
+                result_box.append(fn())
+            except BaseException as exc:  # noqa: BLE001
+                error_box.append(exc)
+
+        thread = threading.Thread(target=_target, daemon=True)
+        thread.start()
+        thread.join()
+
+        if error_box:
+            raise error_box[0]
+        value = result_box[0]
+        return postprocess(value) if postprocess else value
 
     # ------------------------------------------------------------------
     # Directory scanning

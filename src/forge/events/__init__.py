@@ -1,3 +1,3 @@
-from forge.events.observer import ForgeObserver, VerboseObserver
+from forge.events.observer import ConsoleProgressObserver, ForgeObserver, VerboseObserver
 
-__all__ = ["ForgeObserver", "VerboseObserver"]
+__all__ = ["ConsoleProgressObserver", "ForgeObserver", "VerboseObserver"]

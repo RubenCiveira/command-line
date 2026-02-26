@@ -46,6 +46,36 @@ class ForgeObserver:
         """Called when the playbook finishes all steps."""
 
 
+class ConsoleProgressObserver(ForgeObserver):
+    """Lightweight observer that prints brief one-line status to stderr.
+
+    Added by default to ``Forge`` instances so users always see what the
+    framework is doing without having to pass ``verbose=True``.
+    Unlike ``VerboseObserver``, it omits raw inputs/outputs and focuses
+    on task names and high-level results.
+    """
+
+    def on_agent_start(self, agent_name: str, message: str) -> None:
+        print(f"[{agent_name}] starting…", file=sys.stderr, flush=True)
+
+    def on_tool_call(self, agent_name: str, tool_name: str, tool_input: Any) -> None:
+        print(f"[{agent_name}] → {tool_name}…", file=sys.stderr, flush=True)
+
+    def on_tool_result(self, agent_name: str, tool_name: str, result: Any) -> None:
+        first_line = str(result).split("\n")[0][:120]
+        print(f"[{agent_name}] ✓ {first_line}", file=sys.stderr, flush=True)
+
+    def on_agent_end(self, agent_name: str, response: Any) -> None:
+        print(f"[{agent_name}] done.", file=sys.stderr, flush=True)
+
+    def on_step_start(self, step_name: str, agent_name: str, prompt: str) -> None:
+        print(f"[{step_name}] → {agent_name}…", file=sys.stderr, flush=True)
+
+    def on_step_end(self, step_name: str, result: str) -> None:
+        first_line = result.split("\n")[0][:120]
+        print(f"[{step_name}] ✓ {first_line}", file=sys.stderr, flush=True)
+
+
 class VerboseObserver(ForgeObserver):
     """Observer that prints detailed workflow events to stderr.
 
