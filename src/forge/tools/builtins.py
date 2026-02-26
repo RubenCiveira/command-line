@@ -206,15 +206,37 @@ class LspTool(ForgeTool):
 
 class PatchTool(ForgeTool):
     name: str = "patch"
-    description: str = "Apply a unified diff patch."
+    description: str = (
+        "Apply a unified diff patch to modify one or more files. "
+        "Pass the complete patch text as produced by 'git diff' or 'diff -u'. "
+        "Optionally pass {'patch': '...', 'strip': 1} to control path stripping (default strip=1)."
+    )
+    input_description: str = (
+        "A unified diff patch string (output of 'git diff' or 'diff -u'). "
+        "Example:\n"
+        "--- a/src/main.py\n"
+        "+++ b/src/main.py\n"
+        "@@ -10,3 +10,4 @@\n"
+        " existing line\n"
+        "+new line\n"
+        " another line\n"
+        "Pass the full patch text as a plain string."
+    )
 
     def run(self, tool_input: Any) -> Any:
-        patch_text = str(tool_input)
+        tool_input = _to_dict(tool_input)
+        if isinstance(tool_input, dict):
+            patch_text = str(tool_input.get("patch") or tool_input.get("content") or "")
+            strip = int(tool_input.get("strip", 1))
+        else:
+            patch_text = str(tool_input)
+            strip = 1
+
         if not patch_text.strip():
             return "Error: patch input is empty"
         try:
             result = subprocess.run(
-                ["patch", "-p0", "-N", "-r", "-"],
+                ["patch", f"-p{strip}", "-N"],
                 input=patch_text,
                 capture_output=True,
                 text=True,
@@ -222,9 +244,11 @@ class PatchTool(ForgeTool):
             )
             out = (result.stdout or "").strip()
             err = (result.stderr or "").strip()
-            return out if out else err
+            if result.returncode == 0:
+                return out or "Patch applied successfully"
+            return f"Patch failed (exit {result.returncode}):\n{err or out}"
         except FileNotFoundError:
-            return "Error: 'patch' command not available"
+            return "Error: 'patch' command not available on this system"
         except Exception as exc:
             return f"Error applying patch: {exc}"
 
