@@ -173,8 +173,13 @@ class GlobTool(ForgeTool):
         else:
             pattern = str(tool_input)
             root = "."
+        if not pattern:
+            return "Error: glob pattern is required"
         base = Path(root)
-        matches = [str(p) for p in base.glob(pattern)]
+        try:
+            matches = [str(p) for p in base.glob(pattern)]
+        except ValueError as exc:
+            return f"Error: invalid glob pattern '{pattern}': {exc}"
         return "\n".join(matches)
 
 

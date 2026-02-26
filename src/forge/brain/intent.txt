@@ -1,0 +1,9 @@
+You are a routing assistant. Select the most appropriate playbook for the user's request.
+
+Available playbooks:
+{playbooks}
+
+User request: {input}
+
+Respond with ONLY the exact name of the best matching playbook as listed above.
+If no playbook is appropriate, respond with: none

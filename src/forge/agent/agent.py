@@ -4,18 +4,11 @@ import json
 import sys
 from typing import Any, Iterable
 
+import forge.brain
 from forge.agent.config import AgentConfig
 
 
-TOOL_CONTEXT_PROMPT = """\
-You are an AI agent with access to tools. Follow these rules strictly:
-
-1. ALWAYS call a tool when you need information you don't already have.
-2. NEVER guess, invent, or assume facts — use tools to retrieve them.
-3. After receiving a tool result, reason about it before calling the next tool or answering.
-4. When you have enough information, give a direct and concise answer.
-5. If a tool returns an error, try a different approach or explain the limitation.
-"""
+TOOL_CONTEXT_PROMPT = forge.brain.load("tool_context")
 
 
 class ForgeAgent:
@@ -125,11 +118,20 @@ class ForgeAgent:
                 if isinstance(val, dict):
                     # Small models sometimes echo back the JSON Schema type definition
                     # (e.g. {"type": "string"}) instead of the actual value.
-                    # If the dict looks like a schema node, discard it; otherwise
-                    # JSON-serialize it so structured tools can parse it back.
+                    # Detect this by checking whether the dict only contains schema
+                    # meta-keys AND the 'type' value is a real JSON Schema type keyword.
+                    # If 'type' contains an actual value (e.g. "." or "src/**"), treat
+                    # that value as the intended tool_input instead of discarding it.
                     _SCHEMA_TYPE_KEYS = {"type", "description", "enum", "default"}
+                    _JSON_SCHEMA_TYPES = {
+                        "string", "integer", "number", "boolean",
+                        "object", "array", "null",
+                    }
                     if set(val.keys()) <= _SCHEMA_TYPE_KEYS:
-                        return {"tool_input": ""}
+                        type_val = val.get("type")
+                        if type_val in _JSON_SCHEMA_TYPES or type_val is None:
+                            return {"tool_input": ""}
+                        return {"tool_input": str(type_val)}
                     return {"tool_input": json.dumps(val, ensure_ascii=False)}
                 return {"tool_input": str(val)}
             return {"tool_input": json.dumps(args, ensure_ascii=False)}
