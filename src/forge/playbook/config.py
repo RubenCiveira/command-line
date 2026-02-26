@@ -20,3 +20,4 @@ class PlaybookConfig:
     description: str
     agents: dict[str, str]
     units: list[ExecutionUnit]
+    language: str = ""

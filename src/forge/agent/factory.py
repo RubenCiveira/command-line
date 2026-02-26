@@ -8,6 +8,7 @@ from typing import Any, Callable, Iterable, Mapping, Type
 from forge.agent.agent import ForgeAgent
 from forge.agent.config import AgentConfig
 from forge.agent.markdown_parser import ForgeMarkdownAgentParser
+from forge.config.user_config import UserConfig, UserConfigStore
 from forge.llm.llm_factory import LLMFactory
 from forge.permission.broker import PermissionBroker
 from forge.permission.console_broker import ConsolePermissionBroker
@@ -29,6 +30,7 @@ class ForgeAgentFactory:
         permission_broker: PermissionBroker | None = None,
         permission_manager_factory: Callable[[Mapping[str, Any]], PermissionManager] | None = None,
         tool_context_prompt: str | Path | None = None,
+        user_config_store: UserConfigStore | None = None,
         verbose: bool = False,
     ) -> None:
         self._llm_factory = llm_factory or LLMFactory.create
@@ -42,6 +44,8 @@ class ForgeAgentFactory:
             self._tool_context_prompt: str = tool_context_prompt.read_text(encoding="utf-8")
         else:
             self._tool_context_prompt = tool_context_prompt or ""
+        user_config: UserConfig = user_config_store.load() if user_config_store else UserConfig()
+        self._user_language: str = user_config.language
         self._verbose = verbose
 
     def from_markdown(self, path: Path) -> ForgeAgent:
@@ -53,10 +57,11 @@ class ForgeAgentFactory:
         merged_permissions = self._merge_permissions(config.permission)
         permission_manager = self._permission_manager_factory(merged_permissions)
 
-        # Apply factory-level tool_context_prompt as fallback when the agent
-        # definition doesn't specify its own.
+        # Apply factory-level fallbacks when the agent definition doesn't specify its own.
         if self._tool_context_prompt and not config.tool_context_prompt:
             config = dataclasses.replace(config, tool_context_prompt=self._tool_context_prompt)
+        if self._user_language and not config.language:
+            config = dataclasses.replace(config, language=self._user_language)
 
         tools = self._build_tools(config.tool_filter, permission_manager)
         llm = self._llm_factory(config.model, config.temperature, config.extras)

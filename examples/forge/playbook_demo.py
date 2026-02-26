@@ -10,6 +10,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from forge.agent.factory import ForgeAgentFactory
+from forge.config.user_config import FileUserConfigStore
 from forge.permission.console_broker import ConsolePermissionBroker
 from forge.permission.file_store import FilePermissionStore
 from forge.permission.manager import PermissionManager
@@ -36,17 +37,20 @@ def main() -> None:
 
     broker = ConsolePermissionBroker()
     permission_store = FilePermissionStore()
+    user_config_store = FileUserConfigStore(Path(__file__).parent / "user.json")
 
     agent_factory = ForgeAgentFactory(
         permission_store=permission_store,
         permission_manager_factory=lambda permissions: PermissionManager(
             permissions, broker
         ),
+        user_config_store=user_config_store,
         verbose=args.verbose,
     )
 
     playbook_factory = ForgePlaybookFactory(
         agent_factory=agent_factory,
+        user_config_store=user_config_store,
         verbose=args.verbose,
     )
 

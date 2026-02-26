@@ -15,6 +15,7 @@ class AgentConfig:
     permission: Dict[str, Any] = field(default_factory=dict)
     prompt: str = ""
     tool_context_prompt: str = ""
+    language: str = ""
     steps: int = 10
     top_p: float | None = None
     hidden: bool = False

@@ -30,11 +30,11 @@ class ForgeAgent:
         """Clear conversation history."""
         self._history = []
 
-    def invoke(self, message: str) -> Any:
+    def invoke(self, message: str, language: str = "") -> Any:
         from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
         self._history.append(HumanMessage(content=message))
-        system = SystemMessage(content=self._build_system_prompt())
+        system = SystemMessage(content=self._build_system_prompt(language=language))
         max_steps = self.config.steps
 
         for _ in range(max_steps):
@@ -74,7 +74,7 @@ class ForgeAgent:
         # Reached step limit — return whatever the last LLM response was.
         return self._history[-1] if self._history else None
 
-    def _build_system_prompt(self) -> str:
+    def _build_system_prompt(self, language: str = "") -> str:
         """Combine tool context (framework) + agent prompt (user) + tool list.
 
         Order matters: framework instructions come first so they are always
@@ -86,6 +86,8 @@ class ForgeAgent:
         #    Agent-level config takes priority; fall back to the module constant.
         if self.tools:
             tool_ctx = self.config.tool_context_prompt.strip() or TOOL_CONTEXT_PROMPT.strip()
+            lang = language or self.config.language or "the language of the user's input message"
+            tool_ctx = tool_ctx.replace("{language}", lang)
             parts.append(tool_ctx)
 
         # 2. Agent-specific prompt — role, domain, personality, constraints.
@@ -130,9 +132,22 @@ class ForgeAgent:
                     if set(val.keys()) <= _SCHEMA_TYPE_KEYS:
                         type_val = val.get("type")
                         if type_val in _JSON_SCHEMA_TYPES or type_val is None:
+                            # Schema echo detected. The model may have put the real
+                            # value in another key (e.g. {'tool_input': {type:string}, 's': 'path'}).
+                            other_strings = [
+                                v for k, v in args.items()
+                                if k != "tool_input" and isinstance(v, str)
+                            ]
+                            if len(other_strings) == 1:
+                                return {"tool_input": other_strings[0]}
                             return {"tool_input": ""}
                         return {"tool_input": str(type_val)}
                     return {"tool_input": json.dumps(val, ensure_ascii=False)}
                 return {"tool_input": str(val)}
+            # No 'tool_input' key. If there is exactly one string value the LLM
+            # put the actual input under a non-standard key (e.g. 'f', 's', 'file').
+            string_vals = [v for v in args.values() if isinstance(v, str)]
+            if len(string_vals) == 1:
+                return {"tool_input": string_vals[0]}
             return {"tool_input": json.dumps(args, ensure_ascii=False)}
         return {"tool_input": str(args)}

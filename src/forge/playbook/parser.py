@@ -34,6 +34,7 @@ class ForgePlaybookParser:
             description=cfg.get("description", ""),
             agents=cfg.get("agents", {}),
             units=units,
+            language=cfg.get("language", ""),
         )
 
     def _parse_step(self, d: dict) -> PlaybookStep:

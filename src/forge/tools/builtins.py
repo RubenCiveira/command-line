@@ -69,7 +69,7 @@ class BashTool(ForgeTool):
 
 class ReadTool(ForgeTool):
     name: str = "read"
-    description: str = "Read a file from disk."
+    description: str = "Read a file from disk. Pass a file path string, e.g. 'src/forge/agent.py'. Do NOT pass a directory path."
 
     def run(self, tool_input: Any) -> Any:
         path = _coerce_path(tool_input)
@@ -163,7 +163,7 @@ class GrepTool(ForgeTool):
 
 class GlobTool(ForgeTool):
     name: str = "glob"
-    description: str = "Find files by glob pattern."
+    description: str = "Find files recursively by glob pattern. Pass {'pattern': '**/*.py', 'path': 'src'} or a plain pattern string like 'src/**'."
 
     def run(self, tool_input: Any) -> Any:
         tool_input = _to_dict(tool_input)
@@ -185,7 +185,7 @@ class GlobTool(ForgeTool):
 
 class ListTool(ForgeTool):
     name: str = "list"
-    description: str = "List files and folders in a directory."
+    description: str = "List files and folders in a directory. Pass a directory path string, e.g. 'src', 'src/forge', or '.' for the current directory."
 
     def run(self, tool_input: Any) -> Any:
         path = _coerce_path(tool_input) or "."
