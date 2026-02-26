@@ -24,3 +24,5 @@ torch==2.10.0
 langchain-huggingface==1.2.0
 sentence-transformers==5.2.2
 sqlite-vec==0.1.6
+pyttsx3==2.99
+

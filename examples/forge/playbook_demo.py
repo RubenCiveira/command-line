@@ -15,6 +15,7 @@ from forge.permission.console_broker import ConsolePermissionBroker
 from forge.permission.file_store import FilePermissionStore
 from forge.permission.manager import PermissionManager
 from forge.playbook.playbook import ForgePlaybookFactory
+from forge.plugins.speech import SpeechObserver
 
 
 def main() -> None:
@@ -33,11 +34,17 @@ def main() -> None:
         help="Message to pass as {input} to the first step",
     )
     parser.add_argument("--verbose", "-v", action="store_true")
+    parser.add_argument(
+        "--speak", "-s",
+        action="store_true",
+        help="Synthesize the final step output to speech (requires: pip install edge-tts)",
+    )
     args = parser.parse_args()
 
     broker = ConsolePermissionBroker()
     permission_store = FilePermissionStore()
     user_config_store = FileUserConfigStore(Path(__file__).parent / "user.json")
+    user_config = user_config_store.load()
 
     agent_factory = ForgeAgentFactory(
         permission_store=permission_store,
@@ -48,9 +55,20 @@ def main() -> None:
         verbose=args.verbose,
     )
 
+    observers = []
+    if args.speak:
+        observers.append(
+            SpeechObserver(
+                language=user_config.language or "English",
+                step="summary",  # speak only the final summary step
+                debug=True,      # print which backend is used
+            )
+        )
+
     playbook_factory = ForgePlaybookFactory(
         agent_factory=agent_factory,
         user_config_store=user_config_store,
+        observers=observers,
         verbose=args.verbose,
     )
 

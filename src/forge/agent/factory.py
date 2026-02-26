@@ -9,6 +9,7 @@ from forge.agent.agent import ForgeAgent
 from forge.agent.config import AgentConfig
 from forge.agent.markdown_parser import ForgeMarkdownAgentParser
 from forge.config.user_config import UserConfig, UserConfigStore
+from forge.events.observer import ForgeObserver, VerboseObserver
 from forge.llm.llm_factory import LLMFactory
 from forge.permission.broker import PermissionBroker
 from forge.permission.console_broker import ConsolePermissionBroker
@@ -31,6 +32,7 @@ class ForgeAgentFactory:
         permission_manager_factory: Callable[[Mapping[str, Any]], PermissionManager] | None = None,
         tool_context_prompt: str | Path | None = None,
         user_config_store: UserConfigStore | None = None,
+        observers: list[ForgeObserver] | None = None,
         verbose: bool = False,
     ) -> None:
         self._llm_factory = llm_factory or LLMFactory.create
@@ -46,7 +48,13 @@ class ForgeAgentFactory:
             self._tool_context_prompt = tool_context_prompt or ""
         user_config: UserConfig = user_config_store.load() if user_config_store else UserConfig()
         self._user_language: str = user_config.language
-        self._verbose = verbose
+        self._observers: list[ForgeObserver] = list(observers or [])
+        if verbose:
+            self._observers.append(VerboseObserver())
+
+    def add_observer(self, observer: ForgeObserver) -> None:
+        """Register an additional observer. All subsequently created agents will use it."""
+        self._observers.append(observer)
 
     def from_markdown(self, path: Path) -> ForgeAgent:
         parser = ForgeMarkdownAgentParser()
@@ -66,7 +74,7 @@ class ForgeAgentFactory:
         tools = self._build_tools(config.tool_filter, permission_manager)
         llm = self._llm_factory(config.model, config.temperature, config.extras)
         llm_with_tools = llm.bind_tools(tools) if tools else llm
-        return ForgeAgent(config=config, llm=llm_with_tools, tools=tools, verbose=self._verbose)
+        return ForgeAgent(config=config, llm=llm_with_tools, tools=tools, observers=self._observers)
 
     def _merge_permissions(self, agent_permissions: Mapping[str, Any]) -> Mapping[str, Any]:
         if not self._permission_store:

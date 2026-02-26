@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-import sys
 from typing import Any, Iterable
 
 import forge.brain
 from forge.agent.config import AgentConfig
+from forge.events.observer import ForgeObserver
 
 
 TOOL_CONTEXT_PROMPT = forge.brain.load("tool_context")
@@ -17,18 +17,22 @@ class ForgeAgent:
         config: AgentConfig,
         llm: Any,
         tools: Iterable[Any],
-        verbose: bool = False,
+        observers: list[ForgeObserver] | None = None,
     ) -> None:
         self.config = config
         self.llm = llm
-        self.verbose = verbose
         # Keep a name → langchain-tool mapping for dispatching tool calls.
         self.tools: dict[str, Any] = {t.name: t for t in tools}
         self._history: list[Any] = []
+        self._observers: list[ForgeObserver] = list(observers or [])
 
     def reset(self) -> None:
         """Clear conversation history."""
         self._history = []
+
+    def _emit(self, event: str, *args: Any, **kwargs: Any) -> None:
+        for obs in self._observers:
+            getattr(obs, event)(*args, **kwargs)
 
     def invoke(self, message: str, language: str = "") -> Any:
         from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
@@ -37,6 +41,8 @@ class ForgeAgent:
         system = SystemMessage(content=self._build_system_prompt(language=language))
         max_steps = self.config.steps
 
+        self._emit("on_agent_start", self.config.name, message)
+
         for _ in range(max_steps):
             response = self.llm.invoke([system] + self._history)
             self._history.append(response)
@@ -44,8 +50,7 @@ class ForgeAgent:
             tool_calls = getattr(response, "tool_calls", None)
             if not tool_calls:
                 # No tool calls — final answer reached.
-                if self.verbose:
-                    print(f"[forge] final answer", file=sys.stderr)
+                self._emit("on_agent_end", self.config.name, response)
                 return response
 
             # Execute each requested tool and feed results back.
@@ -54,8 +59,7 @@ class ForgeAgent:
                 tool_input = call.get("args", {})
                 call_id = call.get("id", tool_name)
 
-                if self.verbose:
-                    print(f"[forge] tool call  → {tool_name}({tool_input})", file=sys.stderr)
+                self._emit("on_tool_call", self.config.name, tool_name, tool_input)
 
                 tool = self.tools.get(tool_name)
                 if tool is None:
@@ -63,9 +67,7 @@ class ForgeAgent:
                 else:
                     result = tool.invoke(self._normalize_args(tool_input))
 
-                if self.verbose:
-                    preview = str(result)[:200].replace("\n", "\\n")
-                    print(f"[forge] tool result← {preview}", file=sys.stderr)
+                self._emit("on_tool_result", self.config.name, tool_name, result)
 
                 self._history.append(
                     ToolMessage(content=str(result), tool_call_id=call_id)
