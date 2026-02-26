@@ -9,6 +9,8 @@ from typing import Protocol
 @dataclass
 class UserConfig:
     language: str = ""
+    model: str = ""
+    temperature: float | None = None
 
 
 class UserConfigStore(Protocol):
@@ -25,7 +27,11 @@ class FileUserConfigStore:
             return UserConfig()
         try:
             data = json.loads(self._path.read_text(encoding="utf-8"))
-            return UserConfig(language=data.get("language", ""))
+            return UserConfig(
+                language=data.get("language", ""),
+                model=data.get("model", ""),
+                temperature=data.get("temperature"),
+            )
         except (OSError, json.JSONDecodeError):
             return UserConfig()
 

@@ -48,6 +48,8 @@ class ForgeAgentFactory:
             self._tool_context_prompt = tool_context_prompt or ""
         user_config: UserConfig = user_config_store.load() if user_config_store else UserConfig()
         self._user_language: str = user_config.language
+        self._user_model: str = user_config.model
+        self._user_temperature: float | None = user_config.temperature
         self._observers: list[ForgeObserver] = list(observers or [])
         if verbose:
             self._observers.append(VerboseObserver())
@@ -70,6 +72,10 @@ class ForgeAgentFactory:
             config = dataclasses.replace(config, tool_context_prompt=self._tool_context_prompt)
         if self._user_language and not config.language:
             config = dataclasses.replace(config, language=self._user_language)
+        if self._user_model and not config.model:
+            config = dataclasses.replace(config, model=self._user_model)
+        if self._user_temperature is not None and config.temperature is None:
+            config = dataclasses.replace(config, temperature=self._user_temperature)
 
         tools = self._build_tools(config.tool_filter, permission_manager)
         llm = self._llm_factory(config.model, config.temperature, config.extras)
