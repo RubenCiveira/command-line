@@ -144,6 +144,13 @@ class ForgeAgent:
                                 return {"tool_input": other_strings[0]}
                             return {"tool_input": ""}
                         return {"tool_input": str(type_val)}
+                    # The dict has keys beyond the schema meta-keys.
+                    # Common pattern: {"type": "string", "value": "actual content"}
+                    # where the LLM adds a "value" or "content" key with the real input.
+                    for key in ("value", "content", "text", "input", "prompt"):
+                        candidate = val.get(key)
+                        if isinstance(candidate, str) and candidate:
+                            return {"tool_input": candidate}
                     return {"tool_input": json.dumps(val, ensure_ascii=False)}
                 return {"tool_input": str(val)}
             # No 'tool_input' key. If there is exactly one string value the LLM
