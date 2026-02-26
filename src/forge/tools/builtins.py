@@ -339,6 +339,8 @@ class McpTool(ForgeTool):
 
 
 def all_tools(permissions: PermissionManager | None = None) -> list[ForgeTool]:
+    from forge.tools.image import DalleImageTool, LocalImageTool  # noqa: PLC0415
+
     return [
         BashTool(permissions),
         EditTool(permissions),
@@ -356,4 +358,5 @@ def all_tools(permissions: PermissionManager | None = None) -> list[ForgeTool]:
         WebsearchTool(permissions),
         QuestionTool(permissions),
         McpTool(permissions),
+        LocalImageTool(permissions)
     ]

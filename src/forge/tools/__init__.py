@@ -1,6 +1,7 @@
 """LangChain tool definitions and helpers."""
 
 from forge.tools.base import ForgeTool
+from forge.tools.registry import ToolRegistry
 from forge.tools.builtins import (
     BashTool,
     EditTool,
@@ -23,6 +24,7 @@ from forge.tools.builtins import (
 
 __all__ = [
     "ForgeTool",
+    "ToolRegistry",
     "BashTool",
     "EditTool",
     "WriteTool",

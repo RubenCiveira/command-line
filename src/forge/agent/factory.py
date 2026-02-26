@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Type
+from typing import Any, Callable, Mapping
 
 from forge.agent.agent import ForgeAgent
 from forge.agent.config import AgentConfig
@@ -17,7 +17,7 @@ from forge.permission.manager import PermissionManager
 from forge.permission.store import PermissionStore
 from forge.permission.util import merge_permissions
 from forge.tools.base import ForgeTool
-from forge.tools.builtins import all_tools
+from forge.tools.registry import ToolRegistry
 
 LlmFactory = Callable[[str | None, float | None, Mapping[str, Any]], Any]
 
@@ -26,7 +26,7 @@ class ForgeAgentFactory:
     def __init__(
         self,
         llm_factory: LlmFactory | None = None,
-        tool_classes: Iterable[Type[ForgeTool]] | None = None,
+        tool_registry: ToolRegistry | None = None,
         permission_store: PermissionStore | None = None,
         permission_broker: PermissionBroker | None = None,
         permission_manager_factory: Callable[[Mapping[str, Any]], PermissionManager] | None = None,
@@ -36,7 +36,7 @@ class ForgeAgentFactory:
         verbose: bool = False,
     ) -> None:
         self._llm_factory = llm_factory or LLMFactory.create
-        self._tool_classes = list(tool_classes) if tool_classes else None
+        self._tool_registry = tool_registry
         self._permission_store = permission_store
         self._permission_broker = permission_broker or ConsolePermissionBroker()
         self._permission_manager_factory = permission_manager_factory or (
@@ -79,7 +79,9 @@ class ForgeAgentFactory:
 
         tools = self._build_tools(config.tool_filter, permission_manager)
         llm = self._llm_factory(config.model, config.temperature, config.extras)
-        llm_with_tools = llm.bind_tools(tools) if tools else llm
+        # In react mode the LLM uses text-based tool calling — do NOT bind the
+        # tool schemas via the API (that confuses small models even further).
+        llm_with_tools = llm if config.react else (llm.bind_tools(tools) if tools else llm)
         return ForgeAgent(config=config, llm=llm_with_tools, tools=tools, observers=self._observers)
 
     def _merge_permissions(self, agent_permissions: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -98,17 +100,19 @@ class ForgeAgentFactory:
         return [tool.to_langchain() for tool in enabled]
 
     def _instantiate_tools(self, permission_manager: PermissionManager) -> list[ForgeTool]:
-        if self._tool_classes is None:
-            return all_tools(permission_manager)
-        return [tool_class(permission_manager) for tool_class in self._tool_classes]
+        registry = self._tool_registry or ToolRegistry.default()
+        return registry.build_all(permission_manager)
 
     def _tool_enabled(self, tool: ForgeTool, tool_config: Mapping[str, Any]) -> bool:
         if not tool_config:
             return True
+        # Whitelist mode: if any pattern is explicitly enabled (true), tools that
+        # don't match any pattern are disabled by default.  This lets agents say
+        # "only image" without having to enumerate every other tool as false.
+        has_whitelist = any(bool(v) for v in tool_config.values())
+        default = not has_whitelist
         decision = None
         for pattern, value in tool_config.items():
             if fnmatch(tool.name, pattern):
                 decision = bool(value)
-        if decision is None:
-            return True
-        return decision
+        return decision if decision is not None else default

@@ -27,6 +27,7 @@ from forge.permission.console_broker import ConsolePermissionBroker
 from forge.permission.file_store import FilePermissionStore
 from forge.permission.manager import PermissionManager
 from forge.tools.image import DalleImageTool, LocalImageTool
+from forge.tools.registry import ToolRegistry
 
 
 def main() -> None:
@@ -59,9 +60,13 @@ def main() -> None:
     else:
         image_tool = LocalImageTool(model_id=args.model or "stabilityai/sdxl-turbo")
 
-    # Build the factory with the image tool injected as the only enabled tool
+    # Register the pre-configured instance so the factory patches its permissions
+    # at build time and the tool_filter in image_agent.md can select it.
+    registry = ToolRegistry()
+    registry.register_instance(image_tool)
+
     factory = ForgeAgentFactory(
-        tool_classes=[type(image_tool)],
+        tool_registry=registry,
         permission_store=permission_store,
         permission_manager_factory=lambda permissions: PermissionManager(
             permissions, broker
@@ -69,16 +74,6 @@ def main() -> None:
         user_config_store=user_config_store,
         verbose=args.verbose,
     )
-
-    # Patch the factory to use our pre-configured instance (with custom params)
-    # by overriding _instantiate_tools for this one agent.
-    original_instantiate = factory._instantiate_tools
-
-    def _instantiate_with_tool(pm):
-        image_tool._permissions = pm
-        return [image_tool]
-
-    factory._instantiate_tools = _instantiate_with_tool  # type: ignore[method-assign]
 
     agent_path = Path(__file__).parent / "image_agent.md"
     agent = factory.from_markdown(agent_path)

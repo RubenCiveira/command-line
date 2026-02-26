@@ -64,6 +64,12 @@ class LocalImageTool(ForgeTool):
         "Pass a detailed prompt describing the scene, style, lighting, etc. "
         "Returns the file path of the saved image."
     )
+    input_description: str = (
+        "The image prompt as a plain text string — NOT a schema type object. "
+        "Example: 'a wolf howling at the full moon, oil painting, "
+        "dramatic lighting, dark forest background, cinematic'. "
+        "Describe subject, art style, lighting, mood and colors."
+    )
 
     def __init__(
         self,
@@ -156,6 +162,12 @@ class DalleImageTool(ForgeTool):
         "Generate a high-quality image from a text description using DALL-E. "
         "Pass a detailed prompt describing the scene, style, and composition. "
         "Returns the file path of the saved image."
+    )
+    input_description: str = (
+        "The image prompt as a plain text string — NOT a schema type object. "
+        "Example: 'a wolf howling at the full moon, oil painting, "
+        "dramatic lighting, dark forest background, cinematic'. "
+        "Describe subject, art style, lighting, mood and colors."
     )
 
     def __init__(

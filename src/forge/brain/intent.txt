@@ -1,9 +1,8 @@
-You are a routing assistant. Select the most appropriate playbook for the user's request.
+Select the best option for this request. Reply with the option name only — no explanation, no punctuation, nothing else.
 
-Available playbooks:
-{playbooks}
+Options:
+{options}
 
-User request: {input}
+Request: {input}
 
-Respond with ONLY the exact name of the best matching playbook as listed above.
-If no playbook is appropriate, respond with: none
+Answer (one option name only):

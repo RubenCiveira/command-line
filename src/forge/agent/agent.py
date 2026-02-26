@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Iterable
 
 import forge.brain
@@ -9,6 +10,13 @@ from forge.events.observer import ForgeObserver
 
 
 TOOL_CONTEXT_PROMPT = forge.brain.load("tool_context")
+REACT_CONTEXT_PROMPT = forge.brain.load("react_context")
+
+# Matches:  TOOL: tool_name\nINPUT: <text until next TOOL: or end-of-string>
+_REACT_CALL_RE = re.compile(
+    r"TOOL:\s*(\S+)\s*\nINPUT:\s*(.+?)(?=\nTOOL:|\Z)",
+    re.DOTALL | re.IGNORECASE,
+)
 
 
 class ForgeAgent:
@@ -35,6 +43,11 @@ class ForgeAgent:
             getattr(obs, event)(*args, **kwargs)
 
     def invoke(self, message: str, language: str = "") -> Any:
+        if self.config.react:
+            return self._invoke_react(message, language)
+        return self._invoke_standard(message, language)
+
+    def _invoke_standard(self, message: str, language: str = "") -> Any:
         from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
         self._history.append(HumanMessage(content=message))
@@ -76,32 +89,95 @@ class ForgeAgent:
         # Reached step limit — return whatever the last LLM response was.
         return self._history[-1] if self._history else None
 
-    def _build_system_prompt(self, language: str = "") -> str:
-        """Combine tool context (framework) + agent prompt (user) + tool list.
+    def _invoke_react(self, message: str, language: str = "") -> Any:
+        """Text-based ReAct loop for models that don't support function calling.
 
-        Order matters: framework instructions come first so they are always
-        in context, then the agent-specific persona and constraints.
+        The model outputs:
+            TOOL: tool_name
+            INPUT: the actual text to pass
+
+        The agent executes the tool and feeds back:
+            RESULT: <tool output>
+
+        This repeats until the model produces a response with no TOOL/INPUT block.
         """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        self._history.append(HumanMessage(content=message))
+        system = SystemMessage(content=self._build_react_system_prompt(language=language))
+        max_steps = self.config.steps
+
+        self._emit("on_agent_start", self.config.name, message)
+
+        for _ in range(max_steps):
+            response = self.llm.invoke([system] + self._history)
+            self._history.append(response)
+
+            content = response.content if hasattr(response, "content") else str(response)
+            match = _REACT_CALL_RE.search(content)
+
+            if not match:
+                # No tool call pattern — this is the final answer.
+                self._emit("on_agent_end", self.config.name, response)
+                return response
+
+            tool_name = match.group(1).strip()
+            tool_input = match.group(2).strip()
+
+            self._emit("on_tool_call", self.config.name, tool_name, tool_input)
+
+            tool = self.tools.get(tool_name)
+            if tool is None:
+                result = f"Error: unknown tool '{tool_name}'"
+            else:
+                result = tool.invoke({"tool_input": tool_input})
+
+            self._emit("on_tool_result", self.config.name, tool_name, result)
+
+            # Feed the result back as a human message so the model can continue.
+            self._history.append(HumanMessage(content=f"RESULT: {result}"))
+
+        return self._history[-1] if self._history else None
+
+    def _build_system_prompt(self, language: str = "") -> str:
+        """Combine tool context (framework) + agent prompt (user) + tool list."""
         parts: list[str] = []
 
-        # 1. Framework-level tool context — instructs the model on HOW to use tools.
-        #    Agent-level config takes priority; fall back to the module constant.
         if self.tools:
             tool_ctx = self.config.tool_context_prompt.strip() or TOOL_CONTEXT_PROMPT.strip()
             lang = language or self.config.language or "the language of the user's input message"
             tool_ctx = tool_ctx.replace("{language}", lang)
             parts.append(tool_ctx)
 
-        # 2. Agent-specific prompt — role, domain, personality, constraints.
         if self.config.prompt.strip():
             parts.append(self.config.prompt.strip())
 
-        # 3. Available tools — name + description so the model knows WHAT exists.
         if self.tools:
             tool_lines = "\n".join(
                 f"- {name}: {tool.description}" for name, tool in self.tools.items()
             )
             parts.append(f"Available tools:\n{tool_lines}")
+
+        return "\n\n".join(parts)
+
+    def _build_react_system_prompt(self, language: str = "") -> str:
+        """Build the system prompt for ReAct (text-based tool calling) mode."""
+        parts: list[str] = []
+
+        react_ctx = REACT_CONTEXT_PROMPT.strip()
+        lang = language or self.config.language or "the language of the user's input message"
+        react_ctx = react_ctx.replace("{language}", lang)
+
+        if self.tools:
+            tool_lines = "\n".join(
+                f"- {name}: {tool.description}" for name, tool in self.tools.items()
+            )
+            react_ctx = react_ctx.replace("{tool_list}", tool_lines)
+
+        parts.append(react_ctx)
+
+        if self.config.prompt.strip():
+            parts.append(self.config.prompt.strip())
 
         return "\n\n".join(parts)
 

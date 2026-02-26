@@ -10,6 +10,10 @@ class ForgeTool(ABC):
     name: str
     description: str
     permission_key: str | None = None
+    # Subclasses may override this to provide a richer description for the
+    # tool_input field in the generated schema.  Small LLMs use this hint to
+    # understand they must supply a plain string value, not a schema type.
+    input_description: str = ""
 
     def __init__(self, permissions: PermissionManager | None = None) -> None:
         self._permissions = permissions or PermissionManager({})
@@ -19,6 +23,7 @@ class ForgeTool(ABC):
             from langchain_core.tools import StructuredTool
         except ImportError:
             from langchain.tools import StructuredTool  # type: ignore[no-redef]
+        from pydantic import BaseModel, Field  # noqa: PLC0415
 
         # Wrap _invoke in a plain function with an explicit `str` annotation so
         # StructuredTool.from_function builds a clean Pydantic schema.  Using
@@ -26,6 +31,18 @@ class ForgeTool(ABC):
         # where its own `list` shadows the builtin, causing `list[str]` to fail
         # schema generation when bind_tools() converts to OpenAI format.
         _invoke = self._invoke
+        _field_desc = self.input_description or self.description
+
+        # Build a Pydantic schema with a descriptive field so small LLMs
+        # understand the parameter expects a plain string value.
+        _Schema = type(
+            "_Schema",
+            (BaseModel,),
+            {
+                "__annotations__": {"tool_input": str},
+                "tool_input": Field(default="", description=_field_desc),
+            },
+        )
 
         def _call(tool_input: str = "") -> str:
             result = _invoke(tool_input)
@@ -37,6 +54,7 @@ class ForgeTool(ABC):
             func=_call,
             name=self.name,
             description=self.description,
+            args_schema=_Schema,
         )
 
     def _invoke(self, tool_input: Any) -> Any:
