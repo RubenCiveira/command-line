@@ -79,10 +79,26 @@ class ForgeAgentFactory:
 
         tools = self._build_tools(config.tool_filter, permission_manager)
         llm = self._llm_factory(config.model, config.temperature, config.extras)
-        # In react mode the LLM uses text-based tool calling — do NOT bind the
-        # tool schemas via the API (that confuses small models even further).
-        llm_with_tools = llm if config.react else (llm.bind_tools(tools) if tools else llm)
+        # Small local models (Ollama, etc.) don't reliably support structured
+        # function calling via the API.  Sending bind_tools() schemas to them
+        # causes the model to echo the schema metadata instead of actual values.
+        # For those models we skip bind_tools() and rely on the TOOL:/INPUT:
+        # text-based fallback in the agent loop instead.
+        if tools and self._supports_tool_binding(config.model):
+            llm_with_tools = llm.bind_tools(tools)
+        else:
+            llm_with_tools = llm
         return ForgeAgent(config=config, llm=llm_with_tools, tools=tools, observers=self._observers)
+
+    @staticmethod
+    def _supports_tool_binding(model: str | None) -> bool:
+        """Return False for model families known to not support structured tool calling."""
+        if not model:
+            return True
+        # Ollama-served models vary widely in capability; small models like
+        # llama3.2:3b don't support function calling reliably.
+        _TEXT_ONLY_PREFIXES = ("ollama/",)
+        return not any(model.startswith(p) for p in _TEXT_ONLY_PREFIXES)
 
     def _merge_permissions(self, agent_permissions: Mapping[str, Any]) -> Mapping[str, Any]:
         if not self._permission_store:

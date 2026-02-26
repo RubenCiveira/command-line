@@ -45,7 +45,6 @@ class ForgeMarkdownAgentParser:
             hidden=bool(cfg.get("hidden", False)),
             disable=bool(cfg.get("disable", False)),
             color=cfg.get("color"),
-            react=bool(cfg.get("react", False)),
             extras=extras,
         )
 
@@ -85,6 +84,5 @@ class ForgeMarkdownAgentParser:
             "hidden",
             "disable",
             "color",
-            "react",
         }
         return {key: value for key, value in cfg.items() if key not in reserved}

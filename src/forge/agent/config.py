@@ -19,7 +19,6 @@ class AgentConfig:
     steps: int = 10
     top_p: float | None = None
     hidden: bool = False
-    react: bool = False
     disable: bool = False
     color: str | None = None
     extras: Dict[str, Any] = field(default_factory=dict)

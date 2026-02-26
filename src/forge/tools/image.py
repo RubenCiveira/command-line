@@ -96,7 +96,10 @@ class LocalImageTool(ForgeTool):
             ) from exc
 
         if torch.backends.mps.is_available():
-            device, dtype = "mps", torch.float16
+            # MPS float16 support is incomplete: the UNet produces float16
+            # latents that the VAE cannot decode correctly, resulting in a
+            # solid black image.  Use float32 throughout on Apple Silicon.
+            device, dtype = "mps", torch.float32
         elif torch.cuda.is_available():
             device, dtype = "cuda", torch.float16
         else:
@@ -110,6 +113,10 @@ class LocalImageTool(ForgeTool):
             self._model_id,
             torch_dtype=dtype,
         ).to(device)
+        # On CUDA with float16, keep the VAE in float32 to avoid numerical
+        # issues during decoding (replaces the deprecated upcast_vae flag).
+        if dtype == torch.float16:
+            self._pipeline.vae.to(torch.float32)
         print("[image] model ready")
 
     def run(self, tool_input: Any) -> Any:

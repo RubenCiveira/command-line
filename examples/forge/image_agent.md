@@ -5,13 +5,6 @@ model: ollama/llama3.2:3b
 temperature: 0.7
 tool_filter:
   image: true
-  bash: false
-  read: false
-  write: false
-  edit: false
-  list: false
-  glob: false
-  grep: false
 permission:
   image: allow
 ---
